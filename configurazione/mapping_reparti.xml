@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  MAPPING REPARTI e INTENSITÀ
+  Associa i nomi dei reparti nel dump DB (reparto.csv) alle unità operative
+  nel database del personale (DESC_SC_SSD_SS), e definisce l'intensità
+  assistenziale di default per ciascun reparto.
+
+  Ogni <reparto>:
+    - nome_db:      nome reparto dal dump DB (normalizzato upper)
+    - pattern:      regex da cercare in DESC_SC_SSD_SS (case-insensitive)
+                    Se vuoto o assente, il reparto è escluso dal matching.
+    - intensita:    livello di intensità di default
+                    Valori: Intensiva, Alta, Medio/Alta, Media, Medio/Bassa, Bassa, DH_DS
+    - note:         eventuali note esplicative
+
+  SEZIONE INTENSITÀ PER PATTERN:
+  Per i reparti del personale che non hanno corrispondenza nel dump DB,
+  la sezione <IntensitaPerPattern> definisce l'intensità in base a
+  pattern regex sul DESC_SC_SSD_SS. I pattern vengono valutati in ordine:
+  il primo match vince.
+-->
+<MappingReparti>
+
+  <!-- ============================================================ -->
+  <!-- REPARTI: matching dump DB -> personale                        -->
+  <!-- ============================================================ -->
+  <Reparti>
+    <reparto>
+      <nome_db>CARDIOLOGIA</nome_db>
+      <pattern>CARDIOLOGIA</pattern>
+      <intensita>Media</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>CHIRURGIA GENERALE</nome_db>
+      <pattern>CHIRURGIA GENERALE</pattern>
+      <intensita>Media</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>CHIRURGIA SENOLOGICA</nome_db>
+      <pattern>CHIRUGIA SENOLOGICA|BREAST UNIT</pattern>
+      <intensita>Media</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>CHIRURGIA EPATOBILIARE</nome_db>
+      <pattern>CHIRURGIA EPATOBILIARE</pattern>
+      <intensita>Media</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>CHIRURGIA VASCOLARE</nome_db>
+      <pattern>CHIRURGIA VASCOLARE</pattern>
+      <intensita>Media</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>MALATTIE ENDOCRINE,DEL RICAMBIO E DELLA NUTRIZIONE</nome_db>
+      <pattern>MALATTIE ENDOCRINE</pattern>
+      <intensita>Bassa</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>MALATTIE INFETTIVE E TROPICALI</nome_db>
+      <pattern>MALATTIE INFETTIVE</pattern>
+      <intensita>Media</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>MEDICINA GENERALE</nome_db>
+      <pattern>MEDICINA INTERNA</pattern>
+      <intensita>Media</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>NEFROLOGIA</nome_db>
+      <pattern>NEFRODIALISI</pattern>
+      <intensita>Media</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>NIDO</nome_db>
+      <pattern>NEONATOLOGIA|PEDIATRIA</pattern>
+      <intensita>Bassa</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>NEUROLOGIA</nome_db>
+      <pattern>NEUROLOGIA</pattern>
+      <intensita>Media</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>OCULISTICA</nome_db>
+      <pattern>OCULISTICA</pattern>
+      <intensita>Bassa</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>ODONTOIATRIA E STOMATOLOGIA</nome_db>
+      <pattern>ODONTOSTOMATOLOGIA</pattern>
+      <intensita>Bassa</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>ORTOPEDIA E TRAUMATOLOGIA</nome_db>
+      <pattern>ORTOPEDIA.*TRAUMATOLOGIA</pattern>
+      <intensita>Media</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>OSTETRICIA E GINECOLOGIA</nome_db>
+      <pattern>OSTETRICIA.*GINECOLOGIA</pattern>
+      <intensita>Bassa</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>OTORINOLARINGOIATRIA</nome_db>
+      <pattern>OTORINOLARING</pattern>
+      <intensita>Bassa</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>PEDIATRIA</nome_db>
+      <pattern>PEDIATRIA</pattern>
+      <intensita>Medio/Bassa</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>PSICHIATRIA</nome_db>
+      <pattern>CSM|SPDC</pattern>
+      <intensita>Alta</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>UROLOGIA</nome_db>
+      <pattern>\bUROLOGIA\b</pattern>
+      <intensita>Bassa</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>TERAPIA INTENSIVA</nome_db>
+      <pattern>ANESTESIA.*TERAPIA INTENSIVA</pattern>
+      <intensita>Intensiva</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>UNITÀ CORONARICA</nome_db>
+      <pattern>CARDIOLOGIA</pattern>
+      <intensita>Intensiva</intensita>
+      <note>UTIC confluisce in cardiologia</note>
+    </reparto>
+    <reparto>
+      <nome_db>UNITA CORONARICA</nome_db>
+      <pattern>CARDIOLOGIA</pattern>
+      <intensita>Intensiva</intensita>
+      <note>fallback senza accento</note>
+    </reparto>
+    <reparto>
+      <nome_db>ASTANTERIA</nome_db>
+      <pattern>PRONTO SOCCORSO</pattern>
+      <intensita>Bassa</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>RECUPERO E RIABILITAZIONE FUNZIONALE</nome_db>
+      <pattern>RIABILITAZIONE FUNZIONALE</pattern>
+      <intensita>Bassa</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>NEONATOLOGIA</nome_db>
+      <pattern>NEONATOLOGIA</pattern>
+      <intensita>Alta</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>ONCOLOGIA</nome_db>
+      <pattern>ONCOLOGIA</pattern>
+      <intensita>Medio/Alta</intensita>
+    </reparto>
+    <reparto>
+      <nome_db>TERAPIA INTENSIVA NEONATALE</nome_db>
+      <pattern>NEONATOLOGIA</pattern>
+      <intensita>Intensiva</intensita>
+      <note>confluisce in neonatologia</note>
+    </reparto>
+    <reparto>
+      <nome_db>TERAPIA DEL DOLORE</nome_db>
+      <pattern>ANESTESIA.*TERAPIA INTENSIVA</pattern>
+      <intensita>Intensiva</intensita>
+      <note>confluisce in anestesia e terapia intensiva</note>
+    </reparto>
+    <reparto>
+      <nome_db>DETENUTI</nome_db>
+      <pattern>MEDICINA INTERNA</pattern>
+      <intensita>Bassa</intensita>
+      <note>confluisce in medicina interna</note>
+    </reparto>
+    <!-- Reparti esclusi dal matching (pattern vuoto) -->
+    <reparto><nome_db>DAY HOSPITAL</nome_db><note>reparto generico, skip</note></reparto>
+    <reparto><nome_db>DAY SURGERY</nome_db><note>reparto generico, skip</note></reparto>
+    <reparto><nome_db>CARDIOCHIRURGIA</nome_db><note>non ASREM (Gemelli)</note></reparto>
+    <reparto><nome_db>ONCOEMATOLOGIA</nome_db><note>non ASREM (Gemelli)</note></reparto>
+    <reparto><nome_db>NEUROCHIRURGIA</nome_db><note>non ASREM (Neuromed)</note></reparto>
+    <reparto><nome_db>NEURO-RIABILITAZIONE</nome_db><note>non ASREM (Neuromed)</note></reparto>
+    <reparto><nome_db>CHIRURGIA</nome_db><note>generico privato</note></reparto>
+    <reparto><nome_db>MEDICINA</nome_db><note>generico privato</note></reparto>
+    <reparto><nome_db>RIABILITAZIONE</nome_db><note>generico privato</note></reparto>
+  </Reparti>
+
+  <!-- ============================================================ -->
+  <!-- INTENSITÀ PER PATTERN: assegnazione automatica intensità      -->
+  <!-- per i reparti del personale (DESC_SC_SSD_SS)                  -->
+  <!-- Valutati in ordine: il primo match vince.                     -->
+  <!-- ============================================================ -->
+  <IntensitaPerPattern>
+    <!-- Intensiva -->
+    <regola><pattern>ANESTESIA.*TERAPIA INTENSIVA</pattern><intensita>Intensiva</intensita></regola>
+    <regola><pattern>TERAPIA INTENSIVA NEONATALE|T\.?I\.?N\.?</pattern><intensita>Intensiva</intensita></regola>
+
+    <!-- Alta -->
+    <regola><pattern>CSM|SPDC</pattern><intensita>Alta</intensita></regola>
+    <regola><pattern>NEUROCHIRURGIA</pattern><intensita>Alta</intensita></regola>
+    <regola><pattern>NEONATOLOGIA</pattern><intensita>Alta</intensita></regola>
+    <regola><pattern>EMODIALISI</pattern><intensita>Alta</intensita></regola>
+    <regola><pattern>NEURORIABILITAZIONE</pattern><intensita>Alta</intensita></regola>
+
+    <!-- Medio/Alta -->
+    <regola><pattern>ONCOLOGIA</pattern><intensita>Medio/Alta</intensita></regola>
+
+    <!-- Media -->
+    <regola><pattern>CARDIOLOGIA|EMODINAMICA</pattern><intensita>Media</intensita></regola>
+    <regola><pattern>EMATOLOGIA</pattern><intensita>Media</intensita></regola>
+    <regola><pattern>MALATTIE INFETTIVE</pattern><intensita>Media</intensita></regola>
+    <regola><pattern>MEDICINA INTERNA</pattern><intensita>Media</intensita></regola>
+    <regola><pattern>NEFRODIALISI|NEFROLOGIA</pattern><intensita>Media</intensita></regola>
+    <regola><pattern>NEUROLOGIA|STROKE</pattern><intensita>Media</intensita></regola>
+    <regola><pattern>CHIRURGIA GENERALE</pattern><intensita>Media</intensita></regola>
+    <regola><pattern>CHIRURGIA VASCOLARE</pattern><intensita>Media</intensita></regola>
+    <regola><pattern>ORTOPEDIA.*TRAUMATOLOGIA</pattern><intensita>Media</intensita></regola>
+    <regola><pattern>BREAST UNIT|SENOLOGIC</pattern><intensita>Media</intensita></regola>
+    <regola><pattern>GASTROENTEROLOGIA</pattern><intensita>Media</intensita></regola>
+    <regola><pattern>NUTRIZIONE</pattern><intensita>Media</intensita></regola>
+    <regola><pattern>ANZIANO FRAGILE</pattern><intensita>Media</intensita></regola>
+
+    <!-- Medio/Bassa -->
+    <regola><pattern>PEDIATRIA</pattern><intensita>Medio/Bassa</intensita></regola>
+
+    <!-- Bassa -->
+    <regola><pattern>MALATTIE ENDOCRINE</pattern><intensita>Bassa</intensita></regola>
+    <regola><pattern>GERIATRIA</pattern><intensita>Bassa</intensita></regola>
+    <regola><pattern>PRONTO SOCCORSO|ASTANTERIA</pattern><intensita>Bassa</intensita></regola>
+    <regola><pattern>MEDICINA NUCLEARE</pattern><intensita>Bassa</intensita></regola>
+    <regola><pattern>OSTETRICIA.*GINECOLOGIA</pattern><intensita>Bassa</intensita></regola>
+    <regola><pattern>OCULISTICA</pattern><intensita>Bassa</intensita></regola>
+    <regola><pattern>OTORINOLARING</pattern><intensita>Bassa</intensita></regola>
+    <regola><pattern>\bUROLOGIA\b</pattern><intensita>Bassa</intensita></regola>
+    <regola><pattern>RIABILITAZIONE(?!.*NEURO)</pattern><intensita>Bassa</intensita></regola>
+    <regola><pattern>LUNGODEGENZA</pattern><intensita>Bassa</intensita></regola>
+    <regola><pattern>ODONTOSTOMATOLOGIA</pattern><intensita>Bassa</intensita></regola>
+    <regola><pattern>\bNIDO\b</pattern><intensita>Bassa</intensita></regola>
+    <regola><pattern>DETENUTI</pattern><intensita>Bassa</intensita></regola>
+    <regola><pattern>CURE PALLIATIVE|HOSPICE</pattern><intensita>Bassa</intensita></regola>
+  </IntensitaPerPattern>
+
+</MappingReparti>

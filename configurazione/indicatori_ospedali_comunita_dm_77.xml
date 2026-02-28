@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  INDICATORI FABBISOGNO OSPEDALI DI COMUNITÀ - DM 77/2022
+  
+  Il fabbisogno di personale per gli Ospedali di Comunità (OdC) è definito
+  dal DM 77/2022 e NON segue il metodo di calcolo ospedaliero basato su
+  posti letto, intensità e coefficienti di complessità.
+  
+  Il DM 77 stabilisce un numero fisso di unità per ciascun OdC,
+  indipendentemente dal numero di posti letto.
+
+  Ogni <figura> contiene:
+    - profilo:  nome della categoria DM 77 (usato come etichetta nel report)
+    - unita:    numero di unità fabbisogno per OdC
+    - profili_raggruppati: elenco dei PROFILO_RAGGRUPPATO del DB che
+      ricadono in questa categoria (quelli generati da mapping_qualifiche.xml).
+      Se assente, il match avviene per nome esatto (profilo == PROFILO_RAGGRUPPATO).
+-->
+<FabbisognoOdC fonte="DM 77/2022">
+
+  <figura>
+    <profilo>PROFESSIONI SANITARIE INFERMIERISTICHE</profilo>
+    <unita>7</unita>
+    <profili_raggruppati>
+      <voce>INFERMIERE</voce>
+      <voce>INFERMIERE GENERICO ESPERTO</voce>
+    </profili_raggruppati>
+  </figura>
+
+  <figura>
+    <profilo>OPERATORE SOCIO SANITARIO</profilo>
+    <unita>4</unita>
+    <!-- nessun profili_raggruppati: match esatto su OPERATORE SOCIO SANITARIO -->
+  </figura>
+
+  <figura>
+    <profilo>PROFESSIONI SANITARIE DELLA RIABILITAZIONE</profilo>
+    <unita>1</unita>
+    <profili_raggruppati>
+      <voce>FISIOTERAPISTA</voce>
+      <voce>LOGOPEDISTA</voce>
+      <voce>TERAPISTA OCCUPAZIONALE</voce>
+      <voce>TECNICO DELLA RIABILITAZIONE PSICHIATRICA</voce>
+      <voce>TERAPISTA DELLA NEURO E PSICOMOTRICITA</voce>
+    </profili_raggruppati>
+  </figura>
+
+  <figura>
+    <profilo>DIRIGENTE MEDICO</profilo>
+    <unita>1</unita>
+    <!-- nessun profili_raggruppati: match esatto su DIRIGENTE MEDICO -->
+  </figura>
+
+</FabbisognoOdC>

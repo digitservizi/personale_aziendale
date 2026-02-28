@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  FABBISOGNO UOC MEDICINA TRASFUSIONALE – Dotazione richiesta dalla Primaria.
+  Fonte: Dr.ssa Matilde Caruso, Primario UOC Medicina Trasfusionale ASREM.
+
+  Questa configurazione esula dagli standard AGENAS (Tabella 15) che
+  valutano il fabbisogno di un singolo presidio. La UOC Medicina
+  Trasfusionale ASREM opera su 3 ospedali con specializzazioni distribuite:
+
+    - Cardarelli (CB): sede principale, II livello diagnostica,
+                       biologia molecolare
+    - Veneziale  (IS): Officina Trasfusionale Unica Regionale
+                       (produzione emocomponenti, stoccaggio regionale)
+    - S.Timoteo  (TE): polo clinico (ematologia, TAO, coagulazione)
+
+  Il fabbisogno è espresso per sede e per profilo professionale,
+  rappresentando la dotazione minima richiesta per operare in sicurezza.
+-->
+<FabbisognoTrasfusionaleSpeciale>
+
+  <!-- ──────────────────────────────────────────────────────────
+       Mapping unità operative → area trasfusionale.
+       Pattern regex applicato su DESC_SC_SSD_SS del personale.
+       ────────────────────────────────────────────────────────── -->
+  <mapping_unita_operative>
+    <unita pattern="TRASFUSIONALE|SIMT"
+           note="UO afferenti all'area trasfusionale" />
+  </mapping_unita_operative>
+
+  <!-- ──────────────────────────────────────────────────────────
+       Mapping profili del personale → profili fabbisogno UOC.
+       Pattern regex applicato su PROFILO_RAGGRUPPATO (Profilo Professionale).
+       ────────────────────────────────────────────────────────── -->
+  <mapping_profili>
+    <profilo chiave="MEDICO"         label="Medici"
+             pattern="DIRIGENTE MEDICO" />
+    <profilo chiave="BIOLOGO"        label="Biologi"
+             pattern="DIRIGENTE BIOLOGO" />
+    <profilo chiave="INFERMIERE"     label="Infermieri"
+             pattern="INFERMIERE" />
+    <profilo chiave="TSLB"           label="TSLB"
+             pattern="TS LABORATORIO BIOMEDICO" />
+    <profilo chiave="OSS"            label="OSS"
+             pattern="OPERATORE SOCIO SANITARIO" />
+    <profilo chiave="AMMINISTRATIVO" label="Amministrativi"
+             pattern="COLLABORATORE AMMINISTRATIVO|COADIUTORE AMMINISTRATIVO|ASSISTENTE AMMINISTRATIVO" />
+  </mapping_profili>
+
+  <!-- ──────────────────────────────────────────────────────────
+       Fabbisogno per sede: dotazione richiesta per profilo.
+       ────────────────────────────────────────────────────────── -->
+  <sede nome="CAMPOBASSO - P.O. CARDARELLI" abbreviazione="Cardarelli"
+        nota="Sede principale – II livello diagnostica, biologia molecolare">
+    <richiesti profilo="MEDICO"         valore="4" />
+    <richiesti profilo="BIOLOGO"        valore="5" />
+    <richiesti profilo="INFERMIERE"     valore="3" />
+    <richiesti profilo="TSLB"           valore="9" />
+    <richiesti profilo="OSS"            valore="1" />
+    <richiesti profilo="AMMINISTRATIVO" valore="1" />
+  </sede>
+
+  <sede nome="ISERNIA - P.O. VENEZIALE" abbreviazione="Veneziale"
+        nota="Officina Trasfusionale Unica Regionale">
+    <richiesti profilo="MEDICO"         valore="4" />
+    <richiesti profilo="BIOLOGO"        valore="3" />
+    <richiesti profilo="INFERMIERE"     valore="3" />
+    <richiesti profilo="TSLB"           valore="7" />
+    <richiesti profilo="OSS"            valore="1" />
+    <richiesti profilo="AMMINISTRATIVO" valore="1" />
+  </sede>
+
+  <sede nome="TERMOLI - P.O. SAN TIMOTEO" abbreviazione="S.Timoteo"
+        nota="Polo clinico (ematologia, TAO, coagulazione)">
+    <richiesti profilo="MEDICO"         valore="5" />
+    <richiesti profilo="BIOLOGO"        valore="2" />
+    <richiesti profilo="INFERMIERE"     valore="7" />
+    <richiesti profilo="TSLB"           valore="6" />
+    <richiesti profilo="OSS"            valore="1" />
+    <richiesti profilo="AMMINISTRATIVO" valore="1" />
+  </sede>
+
+</FabbisognoTrasfusionaleSpeciale>

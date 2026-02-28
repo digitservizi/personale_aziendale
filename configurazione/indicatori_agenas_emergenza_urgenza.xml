@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  INDICATORI AGENAS - Area dell'Emergenza Urgenza (Tabella 20).
+  Fonte: "Standard di personale" AGENAS – Tabella 20.
+
+  Il parametro di classificazione è il livello del presidio
+  secondo il DM 70/2015:
+    OSPEDALE_DI_BASE  → Pronto Soccorso
+    PRESIDIO_I_LIVELLO → DEA I
+    PRESIDIO_II_LIVELLO → DEA II
+
+  I valori minimi in FTE si intendono riferiti a tutte le attività
+  legate all'accettazione e pronto soccorso: ambulatoriale,
+  osservazione breve intensiva, triage e assistenza sul territorio.
+
+  (*) I valori vanno applicati in relazione agli orari di apertura
+  dei Pronto Soccorso proporzionati sulle 24 ore.
+-->
+<IndicatoriAgenasEmergenzaUrgenza>
+
+  <!-- ============================================================
+       LIVELLI DEI PRESIDI  (Tabella 20)
+       ============================================================ -->
+
+  <livello nome="OSPEDALE_DI_BASE">
+    <profilo nome="DIRIGENTE_MEDICO"          min="6"   max="14" />
+    <profilo nome="INFERMIERE"                min="12"  max="18" />
+    <profilo nome="OPERATORE_SOCIO_SANITARIO" min="3"   max="5" />
+  </livello>
+
+  <livello nome="PRESIDIO_I_LIVELLO">
+    <profilo nome="DIRIGENTE_MEDICO"          min="12"  max="24" />
+    <profilo nome="INFERMIERE"                min="16"  max="48" />
+    <profilo nome="OPERATORE_SOCIO_SANITARIO" min="6"   max="10" />
+  </livello>
+
+  <livello nome="PRESIDIO_II_LIVELLO">
+    <profilo nome="DIRIGENTE_MEDICO"          min="24"  max="40" />
+    <profilo nome="INFERMIERE"                min="48"  max="70" />
+    <profilo nome="OPERATORE_SOCIO_SANITARIO" min="9"   max="12" />
+  </livello>
+
+  <!-- ──────────────────────────────────────────────────────────
+       Mapping unità operative → area emergenza-urgenza.
+       Pattern regex applicato su DESC_SC_SSD_SS (_REPARTO).
+       NON include il 118 (emergenza territoriale).
+       ────────────────────────────────────────────────────────── -->
+  <mapping_unita_operative>
+    <unita pattern="PRONTO SOCCORSO|MCAU|MEDICINA.*CHIRURGIA.*URGENZA"
+           note="UO afferenti all'area Pronto Soccorso / MCAU" />
+  </mapping_unita_operative>
+
+  <!-- ──────────────────────────────────────────────────────────
+       Mapping profili del personale → profili AGENAS emergenza.
+       Pattern regex applicato su PROFILO_RAGGRUPPATO.
+       ────────────────────────────────────────────────────────── -->
+  <mapping_profili>
+    <mappa pattern="DIRIGENTE MEDICO"          profilo_agenas="DIRIGENTE_MEDICO" />
+    <mappa pattern="INFERMIERE"                profilo_agenas="INFERMIERE" />
+    <mappa pattern="OPERATORE SOCIO SANITARIO" profilo_agenas="OPERATORE_SOCIO_SANITARIO" />
+  </mapping_profili>
+
+</IndicatoriAgenasEmergenzaUrgenza>

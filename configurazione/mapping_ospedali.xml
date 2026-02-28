@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  MAPPING OSPEDALI
+  Associa i nomi degli ospedali nel dump DB reparti (reparto.csv)
+  ai nomi delle sedi fisiche nel database del personale (DESC_SEDE_FISICA).
+
+  Ogni <ospedale>:
+    - chiave_db:   sottostringa da cercare in 'nome ospedale' del dump DB (case-insensitive)
+    - chiave_personale: sottostringa da cercare in DESC_SEDE_FISICA (case-insensitive)
+-->
+<MappingOspedali>
+  <ospedale>
+    <chiave_db>CARDARELLI</chiave_db>
+    <chiave_personale>CARDARELLI</chiave_personale>
+  </ospedale>
+  <ospedale>
+    <chiave_db>TIMOTEO</chiave_db>
+    <chiave_personale>SAN TIMOTEO</chiave_personale>
+  </ospedale>
+  <ospedale>
+    <chiave_db>VENEZIALE</chiave_db>
+    <chiave_personale>VENEZIALE</chiave_personale>
+  </ospedale>
+  <ospedale>
+    <chiave_db>CARACCIOLO</chiave_db>
+    <chiave_personale>CARACCIOLO</chiave_personale>
+  </ospedale>
+</MappingOspedali>

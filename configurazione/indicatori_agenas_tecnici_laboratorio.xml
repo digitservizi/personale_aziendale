@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Tabella 17 – Tecnici di Laboratorio
+    Fonte: documento AGENAS, §7.1.9
+
+    Il conteggio è per RUOLO (TS Laboratorio Biomedico) su tutto
+    il presidio, senza filtro per unità operativa di assegnazione.
+-->
+<indicatori_agenas_tecnici_laboratorio>
+
+    <livello nome="OSPEDALE_DI_BASE">
+        <profilo nome="TECNICO_LABORATORIO" min="6" max="20"/>
+    </livello>
+    <livello nome="PRESIDIO_I_LIVELLO">
+        <profilo nome="TECNICO_LABORATORIO" min="10" max="50"/>
+    </livello>
+    <livello nome="PRESIDIO_II_LIVELLO">
+        <profilo nome="TECNICO_LABORATORIO" min="45" max="130"/>
+    </livello>
+
+    <!-- Nessun mapping_uo: il conteggio è trasversale a tutte le UO -->
+
+    <mapping_profili>
+        <mappa pattern="TS LABORATORIO BIOMEDICO"
+               profilo_agenas="TECNICO_LABORATORIO"/>
+    </mapping_profili>
+
+</indicatori_agenas_tecnici_laboratorio>

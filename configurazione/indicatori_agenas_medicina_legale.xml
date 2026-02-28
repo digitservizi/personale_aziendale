@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Tabella 18 – Medicina Legale
+    Fonte: documento AGENAS, §7.1.10
+
+    Solo presidi di I e II livello (non previsto per Ospedale di Base).
+-->
+<indicatori_agenas_medicina_legale>
+
+  <livello nome="PRESIDIO_I_LIVELLO">
+    <profilo nome="DIRIGENTE_MEDICO"          min="1" max="2"/>
+    <profilo nome="INFERMIERE"                min="1" max="1"/>
+    <profilo nome="OPERATORE_SOCIO_SANITARIO" min="1" max="1"/>
+  </livello>
+
+  <livello nome="PRESIDIO_II_LIVELLO">
+    <profilo nome="DIRIGENTE_MEDICO"          min="1" max="3"/>
+    <profilo nome="INFERMIERE"                min="1" max="2"/>
+    <profilo nome="OPERATORE_SOCIO_SANITARIO" min="2" max="3"/>
+  </livello>
+
+  <mapping_unita_operative>
+    <unita pattern="MEDICINA LEGALE"/>
+  </mapping_unita_operative>
+
+  <mapping_profili>
+    <mappa pattern="DIRIGENTE MEDICO"
+           profilo_agenas="DIRIGENTE_MEDICO"/>
+    <mappa pattern="INFERMIERE"
+           profilo_agenas="INFERMIERE"/>
+    <mappa pattern="OPERATORE SOCIO SANITARIO|OSS"
+           profilo_agenas="OPERATORE_SOCIO_SANITARIO"/>
+  </mapping_profili>
+
+</indicatori_agenas_medicina_legale>

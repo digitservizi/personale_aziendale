@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Standard AGENAS – Area Dipendenze Patologiche (SerD)
+  Fonte: Tabella 1 AGENAS – tassi su 100.000 residenti 15-64 anni
+  Standard minimi e standard a regime
+-->
+<indicatori_agenas_dipendenze>
+  <parametri>
+    <base_popolazione>100000</base_popolazione>
+    <fascia_popolazione>range_15_64</fascia_popolazione>
+    <titolo>AREA DIPENDENZE PATOLOGICHE (SerD)</titolo>
+    <riferimento>Tabella 1 AGENAS – Standard personale SerD</riferimento>
+  </parametri>
+
+  <unita_operative>
+    <uo pattern="DIPENDENZ"/>
+  </unita_operative>
+
+  <profili>
+    <profilo nome="Medico" tasso_min="3.0" tasso_regime="4.0"
+             nota="Di cui almeno uno psichiatra">
+      <mappa qualifica="DIRIGENTE MEDICO"/>
+    </profilo>
+    <profilo nome="Psicologo" tasso_min="3.0" tasso_regime="3.5">
+      <mappa qualifica="DIRIGENTE PSICOLOGO"/>
+    </profilo>
+    <profilo nome="Infermiere" tasso_min="4.0" tasso_regime="6.0">
+      <mappa qualifica="INFERMIERE"/>
+    </profilo>
+    <profilo nome="Educatore Prof. / TeRP" tasso_min="2.5" tasso_regime="3.5">
+      <mappa qualifica="EDUCATORE PROFESSIONALE"/>
+      <mappa qualifica="TECNICO DELLA RIAB.PSICHIATRICA"/>
+    </profilo>
+    <profilo nome="Assistente Sociale" tasso_min="2.0" tasso_regime="3.0">
+      <mappa qualifica="ASSISTENTE SOCIALE"/>
+    </profilo>
+    <profilo nome="Amministrativo" tasso_min="0.5" tasso_regime="1.0">
+      <mappa qualifica="COLLABORATORE AMMINISTRATIVO"/>
+      <mappa qualifica="ASSISTENTE AMMINISTRATIVO"/>
+      <mappa qualifica="COLLABORATORE TECNICO"/>
+    </profilo>
+  </profili>
+</indicatori_agenas_dipendenze>

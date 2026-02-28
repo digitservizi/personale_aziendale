@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  INDICATORI AGENAS – Area Sale Operatorie (§ 8.1.2).
+  Fonte: "Standard di personale" AGENAS – Paragrafo 8.1.2
+
+  Per ogni seduta operatoria (durata minima di 6 ore) è prevista
+  la presenza minima di:
+    - 1 medico anestesista
+    - 3 infermieri
+    - 1 operatore sociosanitario
+
+  Il numero di medici specialisti (chirurgo generale, oculista,
+  ortopedico, ecc.) risulta già conteggiato nei valori minimi e
+  nei pesi delle tabelle AGENAS per livello di presidio.
+
+  Il fabbisogno in FTE è calcolato con la formula:
+    FTE = sale × personale_per_sala × (ore_copertura × giorni_anno) / ore_annue_eff × (1 + magg)
+-->
+<IndicatoriAgenasSaleOperatorie>
+
+  <!-- ============================================================
+       PARAMETRI OPERATIVI
+       ore_copertura : ore/giorno di copertura della sala (H24 = 24)
+       giorni_anno   : giorni di attività per anno (lun-ven = 250)
+       ============================================================ -->
+  <parametri ore_copertura="12" giorni_anno="250" />
+
+  <!-- ============================================================
+       STANDARD AGENAS  (§ 8.1.2)
+       personale_per_sala = personale necessario per ciascuna sala
+       ============================================================ -->
+  <standard>
+    <profilo nome="DIRIGENTE_MEDICO_ANESTESISTA"  personale_per_sala="1"
+             nota="1 medico anestesista per seduta operatoria" />
+    <profilo nome="INFERMIERE"                    personale_per_sala="3"
+             nota="3 infermieri per seduta operatoria" />
+    <profilo nome="OPERATORE_SOCIO_SANITARIO"     personale_per_sala="1"
+             nota="1 operatore sociosanitario per seduta operatoria" />
+  </standard>
+
+  <!-- ============================================================
+       SALE OPERATORIE PER PRESIDIO
+       Configurate in src/config.py → SALE_OPERATORIE_PER_PRESIDIO
+       ============================================================ -->
+
+  <!-- ──────────────────────────────────────────────────────────
+       Mapping unità operative → area sale operatorie.
+       Pattern regex applicato su DESC_SC_SSD_SS (_REPARTO).
+       ────────────────────────────────────────────────────────── -->
+  <mapping_unita_operative>
+    <unita pattern="SALA OPERATORIA|BLOCCO OPERATORIO|COMPARTO OPERATORIO|SALE OPERATORIE"
+           note="Servizio sale operatorie / blocco operatorio" />
+    <unita pattern="ANESTESIA|RIANIMAZIONE"
+           note="UO di Anestesia / Rianimazione (per conteggio anestesisti)" />
+  </mapping_unita_operative>
+
+  <!-- ──────────────────────────────────────────────────────────
+       Mapping profilo personale → profilo AGENAS.
+       ────────────────────────────────────────────────────────── -->
+  <mapping_profili>
+    <map pattern="DIRIGENTE MEDICO|DIR\.? MED"
+         profilo_agenas="DIRIGENTE_MEDICO_ANESTESISTA" />
+    <map pattern="INFERMIERE|INFERMIERA"
+         profilo_agenas="INFERMIERE" />
+    <map pattern="OPERATORE SOCIO"
+         profilo_agenas="OPERATORE_SOCIO_SANITARIO" />
+  </mapping_profili>
+
+</IndicatoriAgenasSaleOperatorie>

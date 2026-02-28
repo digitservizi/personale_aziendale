@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  INDICATORI AGENAS - Area Medicina Trasfusionale (Tabella 15).
+  Fonte: "Standard di personale" AGENAS – Tabella 15.
+
+  Il parametro di classificazione è il livello del presidio:
+    PRESIDIO_I_LIVELLO, PRESIDIO_II_LIVELLO.
+
+  N.B. L'Ospedale di Base NON è previsto nella tabella AGENAS.
+
+  Include le attività di: Centro Trasfusionale, SIMT.
+-->
+<IndicatoriAgenasTrasfusionale>
+
+  <!-- ============================================================
+       LIVELLI DEI PRESIDI  (Tabella 15)
+       ============================================================ -->
+
+  <livello nome="PRESIDIO_I_LIVELLO">
+    <profilo nome="DIRIGENTE_SANITARIO"     min="1"  max="6" />
+    <profilo nome="INFERMIERE"              min="3"  max="4" />
+    <profilo nome="OPERATORE_SOCIO_SANITARIO" min="1" max="1" />
+  </livello>
+
+  <livello nome="PRESIDIO_II_LIVELLO">
+    <profilo nome="DIRIGENTE_SANITARIO"     min="3"  max="16" />
+    <profilo nome="INFERMIERE"              min="5"  max="6" />
+    <profilo nome="OPERATORE_SOCIO_SANITARIO" min="1" max="1" />
+  </livello>
+
+  <!-- ──────────────────────────────────────────────────────────
+       Mapping unità operative → area trasfusionale.
+       Pattern regex applicato su DESC_SC_SSD_SS del personale.
+       ────────────────────────────────────────────────────────── -->
+  <mapping_unita_operative>
+    <unita pattern="TRASFUSIONALE|SIMT"
+           note="UO afferenti all'area trasfusionale" />
+  </mapping_unita_operative>
+
+  <!-- ──────────────────────────────────────────────────────────
+       Mapping profili del personale → profili AGENAS trasfusionale.
+       Pattern regex applicato su PROFILO_RAGGRUPPATO.
+       "Dirigenti Sanitari Medici e Non Medici" include Dirigenti Medici,
+       Biologi, Chimici, Farmacisti, etc.
+       ────────────────────────────────────────────────────────── -->
+  <mapping_profili>
+    <mappa pattern="DIRIGENTE MEDICO|DIRIGENTE BIOLOGO|DIRIGENTE CHIMICO|DIRIGENTE FARMACIST|DIRIGENTE SANITARIO"
+           profilo_agenas="DIRIGENTE_SANITARIO" />
+    <mappa pattern="INFERMIERE"
+           profilo_agenas="INFERMIERE" />
+    <mappa pattern="OPERATORE SOCIO SANITARIO"
+           profilo_agenas="OPERATORE_SOCIO_SANITARIO" />
+  </mapping_profili>
+
+</IndicatoriAgenasTrasfusionale>

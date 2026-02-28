@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  INDICATORI AGENAS - Standard di personale per aree specifiche.
+  Fonte: Tabelle AGENAS (valori minimi in FTE).
+
+  Struttura:
+    <Area>
+      <fascia>                  → fascia determinata dal volume di attività
+        <profilo min="x" max="y"/>  → range FTE per profilo professionale
+      </fascia>
+    </Area>
+
+  Ogni presidio ha un volume di attività rilevato (es. n. parti)
+  che determina la fascia di appartenenza e quindi il fabbisogno.
+-->
+<IndicatoriAgenas>
+
+  <!-- ============================================================
+       AREA MATERNO INFANTILE  (Tabella 11 AGENAS)
+       Parametro di ingresso: numero di parti annui per presidio
+       ============================================================ -->
+  <AreaMaternoInfantile parametro="parti">
+
+    <fascia nome="500-1500" min="500" max="1500">
+      <profilo nome="DIRIGENTE_MEDICO_PEDIATRIA"  min="6"  max="13" />
+      <profilo nome="DIRIGENTE_MEDICO_OSTETRICIA" min="6"  max="13" />
+      <profilo nome="OSTETRICA"                   min="12" max="24" />
+      <profilo nome="INFERMIERE"                  min="12" max="36" />
+      <profilo nome="OPERATORE_SOCIO_SANITARIO"   min="6"  max="12" />
+    </fascia>
+
+    <fascia nome="1500-2000" min="1500" max="2000">
+      <profilo nome="DIRIGENTE_MEDICO_PEDIATRIA"  min="13" max="18" />
+      <profilo nome="DIRIGENTE_MEDICO_OSTETRICIA" min="13" max="18" />
+      <profilo nome="OSTETRICA"                   min="24" max="33" />
+      <profilo nome="INFERMIERE"                  min="18" max="46" />
+      <profilo nome="OPERATORE_SOCIO_SANITARIO"   min="12" max="18" />
+    </fascia>
+
+    <fascia nome=">2000" min="2000" max="999999">
+      <profilo nome="DIRIGENTE_MEDICO_PEDIATRIA"  min="15" max="30" />
+      <profilo nome="DIRIGENTE_MEDICO_OSTETRICIA" min="15" max="30" />
+      <profilo nome="OSTETRICA"                   min="33" max="60" />
+      <profilo nome="INFERMIERE"                  min="40" max="80" />
+      <profilo nome="OPERATORE_SOCIO_SANITARIO"   min="18" max="30" />
+    </fascia>
+
+    <!-- ──────────────────────────────────────────────────────────
+         Mapping unità operative → profili AGENAS.
+         Pattern regex applicato su DESC_SC_SSD_SS del personale.
+         ────────────────────────────────────────────────────────── -->
+    <mapping_unita_operative>
+      <unita pattern="PEDIATRIA|NEONATOLOGIA"
+             profilo_agenas="DIRIGENTE_MEDICO_PEDIATRIA"
+             note="SC/SS Pediatria e Neonatologia" />
+      <unita pattern="OSTETRICIA|GINECOLOGIA"
+             profilo_agenas="DIRIGENTE_MEDICO_OSTETRICIA"
+             note="SC/SS Ostetricia e Ginecologia" />
+    </mapping_unita_operative>
+
+    <!-- ──────────────────────────────────────────────────────────
+         Mapping profili del personale → profili AGENAS.
+         Pattern regex applicato su PROFILO_RAGGRUPPATO.
+         ────────────────────────────────────────────────────────── -->
+    <mapping_profili>
+      <mappa pattern="DIRIGENTE MEDICO"           profilo_agenas="DIRIGENTE_MEDICO_PEDIATRIA"
+             note="solo se assegnato a UO pediatria/neonatologia" />
+      <mappa pattern="DIRIGENTE MEDICO"           profilo_agenas="DIRIGENTE_MEDICO_OSTETRICIA"
+             note="solo se assegnato a UO ostetricia/ginecologia" />
+      <mappa pattern="OSTETRICA"                  profilo_agenas="OSTETRICA" />
+      <mappa pattern="INFERMIERE"                 profilo_agenas="INFERMIERE" />
+      <mappa pattern="OPERATORE SOCIO SANITARIO"  profilo_agenas="OPERATORE_SOCIO_SANITARIO" />
+    </mapping_profili>
+
+  </AreaMaternoInfantile>
+
+  <!-- ============================================================
+       ALTRE AREE AGENAS (da aggiungere)
+       Seguiranno la stessa struttura con il proprio parametro
+       di ingresso e le proprie fasce/profili.
+       ============================================================ -->
+
+</IndicatoriAgenas>

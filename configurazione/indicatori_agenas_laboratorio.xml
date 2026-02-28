@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  INDICATORI AGENAS - Area dei Servizi di Laboratorio (Tabella 14).
+  Fonte: "Standard di personale" AGENAS – Tabella 14.
+
+  Il parametro di classificazione è il livello del presidio:
+    OSPEDALE_DI_BASE, PRESIDIO_I_LIVELLO, PRESIDIO_II_LIVELLO.
+
+  Nell'area dei servizi di laboratorio vanno incluse le attività di:
+    Laboratorio Analisi, Microbiologia e Virologia, Genetica ed
+    epidemiologia clinica, Tossicologia.
+
+  (*) Dirigenti Sanitari Medici e Non Medici: comprese guardie e apicalità.
+-->
+<IndicatoriAgenasLaboratorio>
+
+  <!-- ============================================================
+       LIVELLI DEI PRESIDI  (Tabella 14)
+       ============================================================ -->
+
+  <livello nome="OSPEDALE_DI_BASE">
+    <profilo nome="DIRIGENTE_SANITARIO"       min="0"  max="6" />
+    <profilo nome="INFERMIERE"                min="1"  max="2" />
+    <profilo nome="OPERATORE_SOCIO_SANITARIO" min="1"  max="1" />
+  </livello>
+
+  <livello nome="PRESIDIO_I_LIVELLO">
+    <profilo nome="DIRIGENTE_SANITARIO"       min="4"  max="20" />
+    <profilo nome="INFERMIERE"                min="2"  max="4" />
+    <profilo nome="OPERATORE_SOCIO_SANITARIO" min="1"  max="2" />
+  </livello>
+
+  <livello nome="PRESIDIO_II_LIVELLO">
+    <profilo nome="DIRIGENTE_SANITARIO"       min="18" max="38" />
+    <profilo nome="INFERMIERE"                min="4"  max="9" />
+    <profilo nome="OPERATORE_SOCIO_SANITARIO" min="2"  max="3" />
+  </livello>
+
+  <!-- ──────────────────────────────────────────────────────────
+       Mapping unità operative → area servizi di laboratorio.
+       Pattern regex applicato su DESC_SC_SSD_SS del personale.
+       Escluse le UO di medicina trasfusionale e anatomia patologica
+       (hanno tabelle AGENAS proprie).
+       ────────────────────────────────────────────────────────── -->
+  <mapping_unita_operative>
+    <unita pattern="LABORATORIO ANALISI|MICROBIOLOG|VIROLOG|TOSSICOLOG"
+           note="UO afferenti all'area servizi di laboratorio" />
+  </mapping_unita_operative>
+
+  <!-- ──────────────────────────────────────────────────────────
+       Pattern di esclusione: UO che NON devono essere contate
+       in quest'area perché hanno una propria tabella AGENAS.
+       ────────────────────────────────────────────────────────── -->
+  <esclusioni>
+    <escludi pattern="TRASFUSIONALE|SIMT|ANATOMIA PATOLOGIC" />
+  </esclusioni>
+
+  <!-- ──────────────────────────────────────────────────────────
+       Mapping profili del personale → profili AGENAS laboratorio.
+       Pattern regex applicato su PROFILO_RAGGRUPPATO.
+       "Dirigenti Sanitari Medici e Non Medici" include Dirigenti Medici,
+       Biologi, Chimici, Farmacisti, etc.
+       (*) comprese guardie e apicalità
+       ────────────────────────────────────────────────────────── -->
+  <mapping_profili>
+    <mappa pattern="DIRIGENTE MEDICO|DIRIGENTE BIOLOGO|DIRIGENTE CHIMICO|DIRIGENTE FARMACIST|DIRIGENTE SANITARIO|DOCENTE UNIVERSITARIO MEDICO"
+           profilo_agenas="DIRIGENTE_SANITARIO" />
+    <mappa pattern="INFERMIERE"
+           profilo_agenas="INFERMIERE" />
+    <mappa pattern="OPERATORE SOCIO SANITARIO"
+           profilo_agenas="OPERATORE_SOCIO_SANITARIO" />
+  </mapping_profili>
+
+</IndicatoriAgenasLaboratorio>

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  MAPPER MEDICI - ATTO AZIENDALE ASREM
+  
+  Mappa le discipline dell'atto aziendale ai valori reali della colonna
+  DESC_DISCIPLINE del DB del personale (normalizzati UPPER).
+  
+  Ogni <disciplina> ha:
+    - <nome_atto>: Nome come da atto aziendale
+    - <dotazione>: Dotazione organica prevista dall'atto aziendale
+    - <discipline_db>: Una o più <voce> con i nomi esatti dal DB personale (UPPER)
+      che concorrono a formare il conteggio per questa disciplina
+  
+  Il report confronta: dotazione atto aziendale vs personale effettivo in servizio.
+-->
+<MediciAttoAziendale>
+
+  <disciplina>
+    <nome_atto>Anestesia e rianimazione</nome_atto>
+    <dotazione>64</dotazione>
+    <discipline_db>
+      <voce>ANESTESIA E RIANIMAZIONE</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Cardiologia</nome_atto>
+    <dotazione>47</dotazione>
+    <discipline_db>
+      <voce>CARDIOLOGIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Chirurgia Generale</nome_atto>
+    <dotazione>44</dotazione>
+    <discipline_db>
+      <voce>CHIRURGIA GENERALE</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Chirurgia Vascolare</nome_atto>
+    <dotazione>7</dotazione>
+    <discipline_db>
+      <voce>CHIRURGIA VASCOLARE</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Geriatria</nome_atto>
+    <dotazione>11</dotazione>
+    <discipline_db>
+      <voce>GERIATRIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Ginecologia e ostetricia</nome_atto>
+    <dotazione>39</dotazione>
+    <discipline_db>
+      <voce>GINECOLOGIA E OSTETRICIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Medicina e Chir. d'urgenza</nome_atto>
+    <dotazione>51</dotazione>
+    <discipline_db>
+      <voce>MEDICINA E CHIR.D'ACCETTAZIONE E URGENZA</voce>
+      <voce>PRONTO SOCCORSO</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Medicina Interna</nome_atto>
+    <dotazione>65</dotazione>
+    <discipline_db>
+      <voce>MEDICINA INTERNA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Medicina del lavoro</nome_atto>
+    <dotazione>9</dotazione>
+    <discipline_db>
+      <voce>MEDICINA LAV. SICUREZZA AMBIENTI LAVORO</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Nefrologia</nome_atto>
+    <dotazione>22</dotazione>
+    <discipline_db>
+      <voce>NEFROLOGIA</voce>
+      <voce>NEFROLOGIA E DIALISI</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Neonatologia</nome_atto>
+    <dotazione>14</dotazione>
+    <discipline_db>
+      <voce>NEONATOLOGIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Neuropsichiatria infantile</nome_atto>
+    <dotazione>8</dotazione>
+    <discipline_db>
+      <voce>NEUROPSICHIATRIA INFANTILE</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Laboratorio analisi e Trasfusionale</nome_atto>
+    <dotazione>31</dotazione>
+    <discipline_db>
+      <voce>LABORATORIO ANALISI</voce>
+      <voce>PATOLOGIA CLINICA(LAB.AN.CHIM.CL.MICR.)</voce>
+      <voce>MEDICINA TRASFUSIONALE</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Radiodiagnostica</nome_atto>
+    <dotazione>38</dotazione>
+    <discipline_db>
+      <voce>RADIODIAGNOSTICA</voce>
+      <voce>MEDICINA NUCLEARE</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Urologia</nome_atto>
+    <dotazione>18</dotazione>
+    <discipline_db>
+      <voce>UROLOGIA</voce>
+    </discipline_db>
+  </disciplina>
+
+</MediciAttoAziendale>

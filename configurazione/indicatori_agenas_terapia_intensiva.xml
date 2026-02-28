@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  INDICATORI AGENAS – Area Terapia Intensiva (§ 8.1.1).
+  Fonte: "Standard di personale" AGENAS – Paragrafo 8.1.1
+
+  Lo standard è definito come RAPPORTO LETTI/OPERATORE PER TURNO:
+    - 1 medico anestesista-rianimatore ogni 8 letti
+    - 1 infermiere ogni 2 letti
+
+  Il fabbisogno in FTE è calcolato con la formula:
+    FTE = (PL / rapporto_letti) × (ore_turno × 365) / ore_annue_eff
+
+  dove si contano i soli posti letto ordinari delle UO di Anestesia
+  e Terapia Intensiva / Rianimazione, e i parametri ore_turno e
+  ore_annue_eff sono letti dal file indicatori_medici.xml
+  (livello di intensità "Intensiva").
+
+  (*) Lo standard OSS non è definito da AGENAS per l'area intensiva
+  a causa della forte variabilità tra strutture.
+-->
+<IndicatoriAgenasTerapiaIntensiva>
+
+  <!-- ============================================================
+       STANDARD AGENAS  (§ 8.1.1)
+       rapporto_letti = quanti letti per ciascun operatore in turno
+       ============================================================ -->
+  <standard>
+    <profilo nome="DIRIGENTE_MEDICO"  rapporto_letti="8"
+             nota="1 medico anestesista-rianimatore ogni 8 letti" />
+    <profilo nome="INFERMIERE"        rapporto_letti="2"
+             nota="1 infermiere ogni 2 letti" />
+  </standard>
+
+  <!-- ──────────────────────────────────────────────────────────
+       Mapping unità operative → area terapia intensiva.
+       Pattern regex applicato su DESC_SC_SSD_SS (_REPARTO).
+       ────────────────────────────────────────────────────────── -->
+  <mapping_unita_operative>
+    <unita pattern="ANESTESIA.*TERAPIA INTENSIVA|TERAPIA INTENSIVA.*ANESTESIA|RIANIMAZIONE"
+           note="UO di Anestesia e Terapia Intensiva / Rianimazione" />
+  </mapping_unita_operative>
+
+  <!-- ──────────────────────────────────────────────────────────
+       Mapping profilo personale → profilo AGENAS.
+       ────────────────────────────────────────────────────────── -->
+  <mapping_profili>
+    <map pattern="DIRIGENTE MEDICO|DIR\.? MED"
+         profilo_agenas="DIRIGENTE_MEDICO" />
+    <map pattern="INFERMIERE|INFERMIERA"
+         profilo_agenas="INFERMIERE" />
+  </mapping_profili>
+
+</IndicatoriAgenasTerapiaIntensiva>

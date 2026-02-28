@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  MAPPING OSPEDALE DI COMUNITÀ - LARINO
+  Definisce le strutture degenziali dell'OdC di Larino,
+  identificate tramite la colonna DESC_TIPO_CDC del database personale.
+
+  Ogni <struttura>:
+    - nome:             nome descrittivo della struttura
+    - pattern_cdc:      regex da cercare in DESC_TIPO_CDC (case-insensitive)
+    - tipo_sede:        valore atteso in DESC_TIPO_SEDE
+    - sede_fisica:      valore atteso in DESC_SEDE_FISICA
+    - posti_letto:      posti letto della struttura (da compilare)
+    - intensita:        livello di intensità assistenziale
+    - note:             eventuali annotazioni
+-->
+<OspedaleComunita nome="Larino">
+
+  <struttura>
+    <nome>OdC Larino - U.D.I.</nome>
+    <pattern_cdc>OSP. COMUNITA.*LARINO.*U\.?D\.?I</pattern_cdc>
+    <tipo_sede>DISTRETTO LARINO</tipo_sede>
+    <sede_fisica>TERMOLI - LARINO</sede_fisica>
+    <posti_letto>
+      <ordinari>20</ordinari>
+      <dh>0</dh>
+      <ds>0</ds>
+    </posti_letto>
+    <intensita>Bassa</intensita>
+    <note>Unità Degenza Infermieristica - Ospedale di Comunità</note>
+  </struttura>
+
+  <struttura>
+    <nome>RSA Larino</nome>
+    <pattern_cdc>DS TE.*RSA.*LARINO</pattern_cdc>
+    <tipo_sede>DISTRETTO LARINO</tipo_sede>
+    <sede_fisica>TERMOLI - LARINO</sede_fisica>
+    <posti_letto>
+      <ordinari>50</ordinari>
+      <dh>0</dh>
+      <ds>0</ds>
+    </posti_letto>
+    <intensita>Bassa</intensita>
+    <note>Residenza Sanitaria Assistenziale</note>
+  </struttura>
+
+  <struttura>
+    <nome>Hospice Larino</nome>
+    <pattern_cdc>DS TE.*HOSPICE</pattern_cdc>
+    <tipo_sede>DISTRETTO LARINO</tipo_sede>
+    <sede_fisica>TERMOLI - LARINO</sede_fisica>
+    <posti_letto>
+      <ordinari>16</ordinari>
+      <dh>0</dh>
+      <ds>0</ds>
+    </posti_letto>
+    <intensita>Bassa</intensita>
+    <note>Cure palliative - Hospice</note>
+  </struttura>
+
+  <struttura>
+    <nome>Riabilitazione Post COVID Larino</nome>
+    <pattern_cdc>DS TE.*RIABILITAZIONE.*POST COVID</pattern_cdc>
+    <tipo_sede>DISTRETTO LARINO</tipo_sede>
+    <sede_fisica>TERMOLI - LARINO</sede_fisica>
+    <posti_letto>
+      <ordinari>0</ordinari>
+      <dh>0</dh>
+      <ds>0</ds>
+    </posti_letto>
+    <intensita>Bassa</intensita>
+    <note>Riabilitazione post COVID-19</note>
+  </struttura>
+
+  <struttura>
+    <nome>Riabilitazione ex Art.26 Larino</nome>
+    <pattern_cdc>DS TE.*RIABILITAZIONE.*EX ART</pattern_cdc>
+    <tipo_sede>DISTRETTO LARINO</tipo_sede>
+    <sede_fisica>TERMOLI - LARINO</sede_fisica>
+    <posti_letto>
+      <ordinari>40</ordinari>
+      <dh>0</dh>
+      <ds>0</ds>
+    </posti_letto>
+    <intensita>Bassa</intensita>
+    <note>Riabilitazione extraospedaliera a ciclo continuo</note>
+  </struttura>
+
+</OspedaleComunita>

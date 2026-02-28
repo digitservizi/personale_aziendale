@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  INDICATORI AGENAS - Area dei servizi di Radiologia (Tabella 13).
+  Fonte: "Standard di personale" AGENAS – Tabella 13.
+
+  Il parametro di classificazione è il livello del presidio:
+    OSPEDALE_DI_BASE, PRESIDIO_I_LIVELLO, PRESIDIO_II_LIVELLO.
+
+  Include le attività di: Radiologia (69), Radioterapia (70),
+  Radioterapia Oncologica (74), Medicina Nucleare (61), Neuroradiologia.
+
+  (*) Dir. Medici Radiologia: comprese guardie e apicalità.
+-->
+<IndicatoriAgenasRadiologia>
+
+  <!-- ============================================================
+       LIVELLI DEI PRESIDI  (Tabella 13)
+       ============================================================ -->
+
+  <livello nome="OSPEDALE_DI_BASE">
+    <profilo nome="DIRIGENTE_MEDICO_RADIOLOGIA"  min="2"   max="7" />
+    <profilo nome="TECNICO_RADIOLOGIA"           min="4"   max="18" />
+    <profilo nome="INFERMIERE"                   min="0"   max="3" />
+    <profilo nome="OPERATORE_SOCIO_SANITARIO"    min="1"   max="1" />
+  </livello>
+
+  <livello nome="PRESIDIO_I_LIVELLO">
+    <profilo nome="DIRIGENTE_MEDICO_RADIOLOGIA"  min="4"   max="18" />
+    <profilo nome="TECNICO_RADIOLOGIA"           min="10"  max="36" />
+    <profilo nome="INFERMIERE"                   min="3"   max="12" />
+    <profilo nome="OPERATORE_SOCIO_SANITARIO"    min="1"   max="2" />
+  </livello>
+
+  <livello nome="PRESIDIO_II_LIVELLO">
+    <profilo nome="DIRIGENTE_MEDICO_RADIOLOGIA"  min="16"  max="55" />
+    <profilo nome="TECNICO_RADIOLOGIA"           min="36"  max="110" />
+    <profilo nome="INFERMIERE"                   min="10"  max="40" />
+    <profilo nome="OPERATORE_SOCIO_SANITARIO"    min="2"   max="5" />
+  </livello>
+
+  <!-- ──────────────────────────────────────────────────────────
+       Mapping unità operative → area radiologica.
+       Pattern regex applicato su DESC_SC_SSD_SS del personale.
+       Per sedi territoriali si verifica anche il CDC (DESC_TIPO_CDC).
+       ────────────────────────────────────────────────────────── -->
+  <mapping_unita_operative>
+    <unita pattern="RADIOLOGIA|RADIODIAGNOSTICA|RADIOTERAPIA|MEDICINA NUCLEARE|NEURORADIOLOGIA|DIAGNOSTICA PER IMMAGINI"
+           note="UO afferenti all'area radiologica" />
+  </mapping_unita_operative>
+
+  <!-- ──────────────────────────────────────────────────────────
+       Mapping profili del personale → profili AGENAS radiologia.
+       Pattern regex applicato su PROFILO_RAGGRUPPATO.
+       ────────────────────────────────────────────────────────── -->
+  <mapping_profili>
+    <mappa pattern="DIRIGENTE MEDICO"                    profilo_agenas="DIRIGENTE_MEDICO_RADIOLOGIA" />
+    <mappa pattern="TECNICO SANITARIO DI RADIOLOGIA|TS RADIOLOGIA MEDICA|TECNICO.*RADIOLOGIA"     profilo_agenas="TECNICO_RADIOLOGIA" />
+    <mappa pattern="INFERMIERE"                          profilo_agenas="INFERMIERE" />
+    <mappa pattern="OPERATORE SOCIO SANITARIO"           profilo_agenas="OPERATORE_SOCIO_SANITARIO" />
+  </mapping_profili>
+
+</IndicatoriAgenasRadiologia>

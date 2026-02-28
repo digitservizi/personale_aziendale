@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  INDICATORI AGENAS - Anatomia Patologica (Tabella 16).
+  Fonte: "Standard di personale" AGENAS – Tabella 16.
+
+  Il parametro di classificazione è il livello del presidio:
+    OSPEDALE_DI_BASE, PRESIDIO_I_LIVELLO, PRESIDIO_II_LIVELLO.
+
+  (*) Dirigenti Sanitari Medici e Non Medici: comprese guardie e apicalità.
+-->
+<IndicatoriAgenasAnatomiaPatologica>
+
+  <!-- ============================================================
+       LIVELLI DEI PRESIDI  (Tabella 16)
+       ============================================================ -->
+
+  <livello nome="OSPEDALE_DI_BASE">
+    <profilo nome="DIRIGENTE_SANITARIO"       min="0"  max="3" />
+    <profilo nome="INFERMIERE"                min="1"  max="1" />
+    <profilo nome="OPERATORE_SOCIO_SANITARIO" min="1"  max="1" />
+  </livello>
+
+  <livello nome="PRESIDIO_I_LIVELLO">
+    <profilo nome="DIRIGENTE_SANITARIO"       min="0"  max="8" />
+    <profilo nome="INFERMIERE"                min="1"  max="1" />
+    <profilo nome="OPERATORE_SOCIO_SANITARIO" min="1"  max="1" />
+  </livello>
+
+  <livello nome="PRESIDIO_II_LIVELLO">
+    <profilo nome="DIRIGENTE_SANITARIO"       min="3"  max="14" />
+    <profilo nome="INFERMIERE"                min="1"  max="2" />
+    <profilo nome="OPERATORE_SOCIO_SANITARIO" min="1"  max="2" />
+  </livello>
+
+  <!-- ──────────────────────────────────────────────────────────
+       Mapping unità operative → area anatomia patologica.
+       Pattern regex applicato su DESC_SC_SSD_SS del personale.
+       ────────────────────────────────────────────────────────── -->
+  <mapping_unita_operative>
+    <unita pattern="ANATOMIA PATOLOGIC"
+           note="UO afferenti all'area di anatomia patologica" />
+  </mapping_unita_operative>
+
+  <!-- ──────────────────────────────────────────────────────────
+       Mapping profili del personale → profili AGENAS anatomia patologica.
+       Pattern regex applicato su PROFILO_RAGGRUPPATO.
+       "Dirigenti Sanitari Medici e Non Medici" include Dirigenti Medici,
+       Biologi, Chimici, Farmacisti, etc.
+       (*) comprese guardie e apicalità
+       ────────────────────────────────────────────────────────── -->
+  <mapping_profili>
+    <mappa pattern="DIRIGENTE MEDICO|DIRIGENTE BIOLOGO|DIRIGENTE CHIMICO|DIRIGENTE FARMACIST|DIRIGENTE SANITARIO"
+           profilo_agenas="DIRIGENTE_SANITARIO" />
+    <mappa pattern="INFERMIERE"
+           profilo_agenas="INFERMIERE" />
+    <mappa pattern="OPERATORE SOCIO SANITARIO"
+           profilo_agenas="OPERATORE_SOCIO_SANITARIO" />
+  </mapping_profili>
+
+</IndicatoriAgenasAnatomiaPatologica>
