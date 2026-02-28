@@ -222,6 +222,7 @@ from src.tabelle_agenas_trasfusionale import (
     _scrivi_tabella_agenas_trasfusionale,
     _scrivi_tabella_fabbisogno_uoc_trasfusionale,
 )
+from src.riepilogo_agenas_aziendale import scrivi_foglio_riepilogo_agenas
 from src.nota_metodologica import _scrivi_foglio_metodologia
 
 
@@ -1773,6 +1774,37 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
                 row_comp += 1
 
         auto_larghezza_colonne(ws_comp, all_columns_comp, larghezza_min=10)
+
+        # --- Foglio 4: FABBISOGNO AGENAS (riepilogo aziendale) ---
+        scrivi_foglio_riepilogo_agenas(
+            wb_az, grouped, livello_presidio,
+            # Ospedaliere
+            fabb_agenas_per_presidio,
+            mapping_uo_agenas, mapping_profili_agenas,
+            fabb_radio_per_presidio,
+            mapping_uo_radio, mapping_profili_radio,
+            fabb_anapato_per_presidio,
+            mapping_uo_anapato, mapping_profili_anapato,
+            fabb_lab_per_presidio,
+            mapping_uo_lab, mapping_profili_lab, esclusioni_lab,
+            fabb_teclab_per_presidio, mapping_profili_teclab,
+            fabb_medleg_per_presidio,
+            mapping_uo_medleg, mapping_profili_medleg,
+            fabb_trasf_per_presidio,
+            mapping_uo_trasf, mapping_profili_trasf,
+            fabb_trasf_speciale,
+            fabb_emergenza_per_presidio,
+            mapping_uo_emergenza, mapping_profili_emergenza,
+            fabb_ti_per_presidio,
+            mapping_uo_ti, mapping_profili_ti,
+            fabb_so_per_presidio,
+            mapping_uo_so, mapping_profili_so,
+            # Territoriali
+            indicatori_salute_mentale, fabb_salute_mentale,
+            indicatori_dipendenze, fabb_dipendenze,
+            indicatori_npia, fabb_npia,
+            indicatori_carcere, fabb_carcere,
+        )
 
         wb_az.save(nome_file_az)
 
