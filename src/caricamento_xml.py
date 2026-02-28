@@ -27,6 +27,24 @@ def carica_mapping_ospedali(xml_path):
     return mapping
 
 
+def carica_sigle_ospedali(xml_path):
+    """
+    Carica la mappa chiave_personale → sigla sede dall'XML ospedali.
+    Es: {'CARDARELLI': 'CB', 'SAN TIMOTEO': 'TE', ...}
+    Serve per disambiguare match multipli durante la
+    generazione di posti_letto.csv.
+    """
+    tree = ET.parse(xml_path)
+    root = tree.getroot()
+    sigle = {}
+    for osp in root.findall('ospedale'):
+        chiave_pers = osp.findtext('chiave_personale', '').strip()
+        sigla = osp.findtext('sigla', '').strip()
+        if chiave_pers and sigla:
+            sigle[chiave_pers] = sigla
+    return sigle
+
+
 # ============================================================
 # MAPPING REPARTI
 # ============================================================

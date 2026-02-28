@@ -12,17 +12,21 @@
   <ospedale>
     <chiave_db>CARDARELLI</chiave_db>
     <chiave_personale>CARDARELLI</chiave_personale>
+    <sigla>CB</sigla>
   </ospedale>
   <ospedale>
     <chiave_db>TIMOTEO</chiave_db>
     <chiave_personale>SAN TIMOTEO</chiave_personale>
+    <sigla>TE</sigla>
   </ospedale>
   <ospedale>
     <chiave_db>VENEZIALE</chiave_db>
     <chiave_personale>VENEZIALE</chiave_personale>
+    <sigla>IS</sigla>
   </ospedale>
   <ospedale>
     <chiave_db>CARACCIOLO</chiave_db>
     <chiave_personale>CARACCIOLO</chiave_personale>
+    <sigla>AG</sigla>
   </ospedale>
 </MappingOspedali>

@@ -19,7 +19,7 @@ from src.stili_excel import (
     FONT_HEADER, ALIGN_CENTER,
     auto_larghezza_colonne,
 )
-from src.tabelle_agenas_ospedaliere import (
+from src.tabelle_agenas import (
     _scrivi_tabella_agenas_materno_infantile,
     _scrivi_tabella_agenas_radiologia,
     _scrivi_tabella_agenas_emergenza_urgenza,
@@ -30,12 +30,11 @@ from src.tabelle_agenas_ospedaliere import (
     _scrivi_tabella_agenas_laboratorio,
     _scrivi_tabella_agenas_tecnici_laboratorio,
     _scrivi_tabella_agenas_medicina_legale,
-)
-from src.tabelle_agenas_trasfusionale import (
     _scrivi_tabella_agenas_trasfusionale,
     _scrivi_tabella_fabbisogno_uoc_trasfusionale,
+    _scrivi_tabella_agenas_territoriale,
 )
-from src.tabelle_agenas_territoriali import _scrivi_tabella_agenas_territoriale
+
 
 
 # ============================================================

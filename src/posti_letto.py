@@ -42,10 +42,15 @@ def identifica_ospedale_personale(nome_ospedale_db, mapping_ospedali):
 
 
 def trova_reparto_personale(nome_reparto_db, sede_keyword,
-                            reparti_personale, mapping_reparti):
+                            reparti_personale, mapping_reparti,
+                            sigla_sede=None):
     """
     Dato il nome reparto dal dump DB e la keyword della sede,
     cerca il reparto corrispondente tra quelli del personale.
+
+    Se ci sono più match e *sigla_sede* è fornita (es. 'TE'),
+    viene preferito il reparto la cui sigla tra parentesi
+    corrisponde (es. 'SC OSTETRICIA E GINECOLOGIA (TE)').
 
     Restituisce la tupla (DESC_SEDE_FISICA, DESC_SC_SSD_SS)
     oppure None se non trovato.
@@ -78,9 +83,24 @@ def trova_reparto_personale(nome_reparto_db, sede_keyword,
         if re.search(pattern, ssd.upper()):
             matches.append((sede_fisica, ssd))
 
-    if len(matches) >= 1:
+    if not matches:
+        return None
+
+    if len(matches) == 1:
         return matches[0]
-    return None
+
+    # Più match: preferire quello con la sigla sede locale
+    if sigla_sede:
+        tag = f'({sigla_sede.upper()})'
+        for m in matches:
+            if tag in m[1].upper():
+                return m
+        # Fallback: sigla presente anche in combinazione (es. "CB - IS")
+        for m in matches:
+            if sigla_sede.upper() in m[1].upper().split('(')[-1]:
+                return m
+
+    return matches[0]
 
 
 # ============================================================
@@ -136,12 +156,16 @@ def verifica_posti_letto_compilati(file_path):
 
 def genera_posti_letto_da_db(personale_file, reparti_db_file, output_csv,
                              mapping_ospedali, mapping_reparti,
-                             mapping_intensita_pattern, lista_odc=None):
+                             mapping_intensita_pattern, lista_odc=None,
+                             sigle_ospedali=None):
     """
     Genera il CSV posti_letto.csv incrociando:
     1. Le unità operative dal database del personale
     2. I posti letto dal dump DB reparti
     3. Le strutture degli Ospedali di Comunità (da XML)
+
+    *sigle_ospedali*: dict {chiave_personale: sigla} per disambiguare
+    reparti con nome simile (es. Ostetricia (CB) vs (TE) a Termoli).
     """
     print(f"Lettura file personale: {personale_file}")
     personale_df = carica_dataframe(personale_file)
@@ -196,8 +220,12 @@ def genera_posti_letto_da_db(personale_file, reparti_db_file, output_csv,
             )
             continue
 
+        # Ricava sigla (es. 'TE') per disambiguare match multipli
+        sigla = (sigle_ospedali or {}).get(sede_keyword)
+
         match_result = trova_reparto_personale(
-            nome_reparto, sede_keyword, lista_reparti, mapping_reparti
+            nome_reparto, sede_keyword, lista_reparti, mapping_reparti,
+            sigla_sede=sigla,
         )
         if match_result is None:
             no_match_log.append(

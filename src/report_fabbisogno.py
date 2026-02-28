@@ -205,8 +205,8 @@ def _scrivi_foglio_con_titolo(wb, sheet_name, df, titolo):
 # ============================================================
 # IMPORT DEI MODULI ESTRATTI
 # ============================================================
-from src.tabelle_agenas_territoriali import _scrivi_tabella_agenas_territoriale
-from src.tabelle_agenas_ospedaliere import (
+from src.tabelle_agenas import (
+    _scrivi_tabella_agenas_territoriale,
     _scrivi_tabella_agenas_materno_infantile,
     _scrivi_tabella_agenas_radiologia,
     _scrivi_tabella_agenas_emergenza_urgenza,
@@ -217,12 +217,12 @@ from src.tabelle_agenas_ospedaliere import (
     _scrivi_tabella_agenas_laboratorio,
     _scrivi_tabella_agenas_tecnici_laboratorio,
     _scrivi_tabella_agenas_medicina_legale,
-)
-from src.tabelle_agenas_trasfusionale import (
     _scrivi_tabella_agenas_trasfusionale,
     _scrivi_tabella_fabbisogno_uoc_trasfusionale,
 )
 from src.riepilogo_agenas_aziendale import scrivi_foglio_riepilogo_agenas
+from src.riepilogo_fabbisogno_teorico import scrivi_foglio_riepilogo_fabbisogno_teorico
+from src.riepilogo_veterinari import scrivi_foglio_veterinari
 from src.nota_metodologica import _scrivi_foglio_metodologia
 
 
@@ -1805,6 +1805,14 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
             indicatori_npia, fabb_npia,
             indicatori_carcere, fabb_carcere,
         )
+
+        # --- Foglio 5: FABBISOGNO TEORICO (riepilogo aziendale) ---
+        scrivi_foglio_riepilogo_fabbisogno_teorico(
+            wb_az, grouped, livello_presidio,
+        )
+
+        # --- Foglio 6: VETERINARI (riepilogo aziendale) ---
+        scrivi_foglio_veterinari(wb_az, grouped)
 
         wb_az.save(nome_file_az)
 

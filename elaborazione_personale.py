@@ -44,7 +44,8 @@ from src.caricamento_dati import (
     carica_dataframe, normalizza_colonne_personale,
 )
 from src.caricamento_xml import (
-    carica_mapping_ospedali, carica_mapping_reparti,
+    carica_mapping_ospedali, carica_sigle_ospedali,
+    carica_mapping_reparti,
     carica_intensita_per_pattern, carica_mapping_odc,
     carica_indicatori_agenas_materno_infantile,
     carica_indicatori_agenas_radiologia,
@@ -83,6 +84,7 @@ if __name__ == '__main__':
     # --- Caricamento mapping da XML ---
     print("Caricamento mapping da XML...")
     mapping_ospedali = carica_mapping_ospedali(FILE_MAPPING_OSPEDALI)
+    sigle_ospedali = carica_sigle_ospedali(FILE_MAPPING_OSPEDALI)
     mapping_reparti = carica_mapping_reparti(FILE_MAPPING_REPARTI)
     mapping_intensita_pattern = carica_intensita_per_pattern(FILE_MAPPING_REPARTI)
     print(f"  Ospedali: {len(mapping_ospedali)} regole")
@@ -108,6 +110,7 @@ if __name__ == '__main__':
                 FILE_PERSONALE, FILE_REPARTI_DB, FILE_POSTI_LETTO_CSV,
                 mapping_ospedali, mapping_reparti,
                 mapping_intensita_pattern, lista_odc,
+                sigle_ospedali=sigle_ospedali,
             )
         else:
             print("File posti letto CSV e dump DB reparti non trovati.")
@@ -153,6 +156,7 @@ if __name__ == '__main__':
                 FILE_PERSONALE, FILE_REPARTI_DB, FILE_POSTI_LETTO_CSV,
                 mapping_ospedali, mapping_reparti,
                 mapping_intensita_pattern, lista_odc,
+                sigle_ospedali=sigle_ospedali,
             )
         sys.exit(0)
 
