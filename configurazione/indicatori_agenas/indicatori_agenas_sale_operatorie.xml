@@ -58,11 +58,11 @@
        Mapping profilo personale → profilo AGENAS.
        ────────────────────────────────────────────────────────── -->
   <mapping_profili>
-    <map pattern="DIRIGENTE MEDICO|DIR\.? MED"
+    <map pattern="DIRIGENTE MEDICO"
          profilo_agenas="DIRIGENTE_MEDICO_ANESTESISTA" />
-    <map pattern="INFERMIERE|INFERMIERA"
+    <map pattern="INFERMIER"
          profilo_agenas="INFERMIERE" />
-    <map pattern="OPERATORE SOCIO"
+    <map pattern="\bOSS\b|OPERATORE SOCIO"
          profilo_agenas="OPERATORE_SOCIO_SANITARIO" />
   </mapping_profili>
 

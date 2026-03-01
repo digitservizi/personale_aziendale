@@ -56,8 +56,8 @@
        ────────────────────────────────────────────────────────── -->
   <mapping_profili>
     <mappa pattern="DIRIGENTE MEDICO"          profilo_agenas="DIRIGENTE_MEDICO" />
-    <mappa pattern="INFERMIERE"                profilo_agenas="INFERMIERE" />
-    <mappa pattern="OPERATORE SOCIO SANITARIO" profilo_agenas="OPERATORE_SOCIO_SANITARIO" />
+    <mappa pattern="INFERMIER"                 profilo_agenas="INFERMIERE" />
+    <mappa pattern="\bOSS\b|OPERATORE SOCIO"    profilo_agenas="OPERATORE_SOCIO_SANITARIO" />
   </mapping_profili>
 
 </IndicatoriAgenasEmergenzaUrgenza>

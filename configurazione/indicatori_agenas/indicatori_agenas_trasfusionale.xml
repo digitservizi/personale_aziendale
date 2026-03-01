@@ -44,11 +44,11 @@
        Biologi, Chimici, Farmacisti, etc.
        ────────────────────────────────────────────────────────── -->
   <mapping_profili>
-    <mappa pattern="DIRIGENTE MEDICO|DIRIGENTE BIOLOGO|DIRIGENTE CHIMICO|DIRIGENTE FARMACIST|DIRIGENTE SANITARIO"
+    <mappa pattern="DIRIGENTE MEDICO|BIOLOG|CHIMIC|FARMACIST|FISIC|DIRIGENT.*PROF.*SANIT"
            profilo_agenas="DIRIGENTE_SANITARIO" />
-    <mappa pattern="INFERMIERE"
+    <mappa pattern="INFERMIER"
            profilo_agenas="INFERMIERE" />
-    <mappa pattern="OPERATORE SOCIO SANITARIO"
+    <mappa pattern="\bOSS\b|OPERATORE SOCIO"
            profilo_agenas="OPERATORE_SOCIO_SANITARIO" />
   </mapping_profili>
 

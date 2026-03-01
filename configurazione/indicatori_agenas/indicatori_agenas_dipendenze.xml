@@ -22,20 +22,20 @@
       <mappa qualifica="DIRIGENTE MEDICO"/>
     </profilo>
     <profilo nome="Psicologo" tasso_min="3.0" tasso_regime="3.5">
-      <mappa qualifica="DIRIGENTE PSICOLOGO"/>
+      <mappa qualifica="PSICOLOG"/>
     </profilo>
     <profilo nome="Infermiere" tasso_min="4.0" tasso_regime="6.0">
-      <mappa qualifica="INFERMIERE"/>
+      <mappa qualifica="INFERMIER"/>
     </profilo>
     <profilo nome="Educatore Prof. / TeRP" tasso_min="2.5" tasso_regime="3.5">
       <mappa qualifica="EDUCATORE PROFESSIONALE"/>
-      <mappa qualifica="TECNICO DELLA RIAB.PSICHIATRICA"/>
+      <mappa qualifica="TECNICO DELLA RIAB|RIABILIT.*PSICHIATR"/>
     </profilo>
     <profilo nome="Assistente Sociale" tasso_min="2.0" tasso_regime="3.0">
-      <mappa qualifica="ASSISTENTE SOCIALE"/>
+      <mappa qualifica="ASSISTENT[EI] SOCIAL"/>
     </profilo>
     <profilo nome="Amministrativo" tasso_min="0.5" tasso_regime="1.0">
-      <mappa qualifica="COLLABORATORE AMMINISTRATIVO"/>
+      <mappa qualifica="COLLABORATORE AMM"/>
       <mappa qualifica="ASSISTENTE AMMINISTRATIVO"/>
       <mappa qualifica="COLLABORATORE TECNICO"/>
     </profilo>

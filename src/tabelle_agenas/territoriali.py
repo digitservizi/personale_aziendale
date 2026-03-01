@@ -139,7 +139,7 @@ def _scrivi_tabella_agenas_territoriale(
 
             # Verifica se la qualifica è tra quelle del profilo
             for q in prof['qualifiche']:
-                if qualifica.upper() == q.upper():
+                if _re.search(q, qualifica, _re.IGNORECASE):
                     servizio += quantita_ti
                     servizio_td_val += quantita_td
                     break

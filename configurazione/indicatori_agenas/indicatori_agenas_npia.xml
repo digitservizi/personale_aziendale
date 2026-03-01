@@ -21,21 +21,21 @@
     <profilo nome="Dirigenza Sanitaria" tasso="6.0"
              nota="Medici NPI + psicologi psicoterapeuti">
       <mappa qualifica="DIRIGENTE MEDICO"/>
-      <mappa qualifica="DIRIGENTE PSICOLOGO"/>
+      <mappa qualifica="PSICOLOG"/>
     </profilo>
     <profilo nome="Prof. Sanitarie + Ass. Sociali" tasso="10.0"
              nota="TNPEE, educatore/TdRP, infermiere, fisioterapista, assistenti sociali">
-      <mappa qualifica="INFERMIERE"/>
-      <mappa qualifica="TECNICO NEURO-PSICOMOTRICISTA"/>
+      <mappa qualifica="INFERMIER"/>
+      <mappa qualifica="NEUROPSICOMOTRICIST|TECNICO NEURO-PSICOMOTRICIST"/>
       <mappa qualifica="EDUCATORE PROFESSIONALE"/>
-      <mappa qualifica="TECNICO DELLA RIAB.PSICHIATRICA"/>
-      <mappa qualifica="FISIOTERAPISTA"/>
-      <mappa qualifica="LOGOPEDISTA"/>
-      <mappa qualifica="ASSISTENTE SOCIALE"/>
+      <mappa qualifica="TECNICO DELLA RIAB|RIABILIT.*PSICHIATR"/>
+      <mappa qualifica="FISIOTERAPIST"/>
+      <mappa qualifica="LOGOPEDIST"/>
+      <mappa qualifica="ASSISTENT[EI] SOCIAL"/>
     </profilo>
     <profilo nome="Altro Personale" tasso="0.2"
              nota="Incluso personale amministrativo">
-      <mappa qualifica="COLLABORATORE AMMINISTRATIVO"/>
+      <mappa qualifica="COLLABORATORE AMM"/>
       <mappa qualifica="ASSISTENTE AMMINISTRATIVO"/>
       <mappa qualifica="OPERATORE TECNICO"/>
     </profilo>

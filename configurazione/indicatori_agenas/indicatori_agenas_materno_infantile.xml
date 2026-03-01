@@ -67,9 +67,9 @@
              note="solo se assegnato a UO pediatria/neonatologia" />
       <mappa pattern="DIRIGENTE MEDICO"           profilo_agenas="DIRIGENTE_MEDICO_OSTETRICIA"
              note="solo se assegnato a UO ostetricia/ginecologia" />
-      <mappa pattern="OSTETRICA"                  profilo_agenas="OSTETRICA" />
-      <mappa pattern="INFERMIERE"                 profilo_agenas="INFERMIERE" />
-      <mappa pattern="OPERATORE SOCIO SANITARIO"  profilo_agenas="OPERATORE_SOCIO_SANITARIO" />
+      <mappa pattern="OSTETR"                     profilo_agenas="OSTETRICA" />
+      <mappa pattern="INFERMIER"                  profilo_agenas="INFERMIERE" />
+      <mappa pattern="\bOSS\b|OPERATORE SOCIO"     profilo_agenas="OPERATORE_SOCIO_SANITARIO" />
     </mapping_profili>
 
   </AreaMaternoInfantile>

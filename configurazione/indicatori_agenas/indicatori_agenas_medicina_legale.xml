@@ -26,9 +26,9 @@
   <mapping_profili>
     <mappa pattern="DIRIGENTE MEDICO"
            profilo_agenas="DIRIGENTE_MEDICO"/>
-    <mappa pattern="INFERMIERE"
+    <mappa pattern="INFERMIER"
            profilo_agenas="INFERMIERE"/>
-    <mappa pattern="OPERATORE SOCIO SANITARIO|OSS"
+    <mappa pattern="\bOSS\b|OPERATORE SOCIO"
            profilo_agenas="OPERATORE_SOCIO_SANITARIO"/>
   </mapping_profili>
 

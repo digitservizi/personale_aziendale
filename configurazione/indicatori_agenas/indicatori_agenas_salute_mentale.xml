@@ -24,19 +24,19 @@
       <mappa qualifica="DIRIGENTE MEDICO"/>
     </profilo>
     <profilo nome="Psicologi Psicoterapeuti" tasso="0.5">
-      <mappa qualifica="DIRIGENTE PSICOLOGO"/>
+      <mappa qualifica="PSICOLOG"/>
     </profilo>
     <profilo nome="Prof. Sanitarie + Ass. Sociali" tasso="5.0"
              nota="Infermieri, educatori prof., TRP, assistenti sociali, OSS">
-      <mappa qualifica="INFERMIERE"/>
-      <mappa qualifica="TECNICO DELLA RIAB.PSICHIATRICA"/>
-      <mappa qualifica="ASSISTENTE SOCIALE"/>
+      <mappa qualifica="INFERMIER"/>
+      <mappa qualifica="TECNICO DELLA RIAB|RIABILIT.*PSICHIATR"/>
+      <mappa qualifica="ASSISTENT[EI] SOCIAL"/>
       <mappa qualifica="EDUCATORE PROFESSIONALE"/>
-      <mappa qualifica="OPERATORE SOCIO SANITARIO"/>
+      <mappa qualifica="\bOSS\b|OPERATORE SOCIO"/>
     </profilo>
     <profilo nome="Altro Personale" tasso="0.2"
              nota="Incluso personale amministrativo">
-      <mappa qualifica="COLLABORATORE AMMINISTRATIVO"/>
+      <mappa qualifica="COLLABORATORE AMM"/>
       <mappa qualifica="ASSISTENTE AMMINISTRATIVO"/>
       <mappa qualifica="OPERATORE TECNICO"/>
       <mappa qualifica="COLLABORATORE TECNICO"/>

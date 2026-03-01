@@ -28,15 +28,15 @@
     </profilo>
     <profilo nome="Psicologi" tasso="2.0"
              nota="SM + SerD: 1+1 psicologi ogni 350 detenuti">
-      <mappa qualifica="DIRIGENTE PSICOLOGO"/>
+      <mappa qualifica="PSICOLOG"/>
     </profilo>
     <profilo nome="Infermieri" tasso="1.0"
              nota="SM: 1 prof. sanitario ogni 350 detenuti">
-      <mappa qualifica="INFERMIERE"/>
+      <mappa qualifica="INFERMIER"/>
     </profilo>
     <profilo nome="Assistenti Sociali" tasso="1.0"
              nota="SerD: 1 assistente sociale ogni 350 detenuti">
-      <mappa qualifica="ASSISTENTE SOCIALE"/>
+      <mappa qualifica="ASSISTENT[EI] SOCIAL"/>
     </profilo>
   </profili>
 </indicatori_agenas_carcere>

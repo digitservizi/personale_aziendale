@@ -21,7 +21,7 @@
     <!-- Nessun mapping_uo: il conteggio è trasversale a tutte le UO -->
 
     <mapping_profili>
-        <mappa pattern="TS LABORATORIO BIOMEDICO"
+        <mappa pattern="TECNIC.*LABORATORIO|TS LABORATORIO"
                profilo_agenas="TECNICO_LABORATORIO"/>
     </mapping_profili>
 

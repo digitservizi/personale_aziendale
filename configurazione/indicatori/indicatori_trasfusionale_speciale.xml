@@ -35,15 +35,15 @@
     <profilo chiave="MEDICO"         label="Medici"
              pattern="DIRIGENTE MEDICO" />
     <profilo chiave="BIOLOGO"        label="Biologi"
-             pattern="DIRIGENTE BIOLOGO" />
+             pattern="BIOLOG" />
     <profilo chiave="INFERMIERE"     label="Infermieri"
-             pattern="INFERMIERE" />
+             pattern="INFERMIER" />
     <profilo chiave="TSLB"           label="TSLB"
-             pattern="TS LABORATORIO BIOMEDICO" />
+             pattern="TECNIC.*LABORATORIO|TS LABORATORIO" />
     <profilo chiave="OSS"            label="OSS"
-             pattern="OPERATORE SOCIO SANITARIO" />
+             pattern="\bOSS\b|OPERATORE SOCIO" />
     <profilo chiave="AMMINISTRATIVO" label="Amministrativi"
-             pattern="COLLABORATORE AMMINISTRATIVO|COADIUTORE AMMINISTRATIVO|ASSISTENTE AMMINISTRATIVO" />
+             pattern="COLLABORATORE AMM|COADIUTORE AMM|ASSISTENTE AMMINISTRATIVO" />
   </mapping_profili>
 
   <!-- ──────────────────────────────────────────────────────────
