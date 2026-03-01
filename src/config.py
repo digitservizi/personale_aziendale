@@ -21,27 +21,35 @@ FILE_POSTI_LETTO_CSV = 'sorgenti/posti_letto.csv'
 # ============================================================
 # FILE XML DI CONFIGURAZIONE
 # ============================================================
-FILE_INDICATORI = 'configurazione/indicatori_medici.xml'
-FILE_MAPPING_OSPEDALI = 'configurazione/mapping_ospedali.xml'
-FILE_MAPPING_REPARTI = 'configurazione/mapping_reparti.xml'
+
+# ── Atto aziendale (dotazione organica) ──────────────────────
+FILE_MEDICI_ATTO_AZIENDALE = 'configurazione/atto_aziendale/medici_atto_aziendale.xml'
+FILE_PROFILI_ATTO_AZIENDALE = 'configurazione/atto_aziendale/profili_atto_aziendale.xml'
+
+# ── Mapping strutture ────────────────────────────────────────
+FILE_MAPPING_OSPEDALI = 'configurazione/mapping/mapping_ospedali.xml'
+FILE_MAPPING_REPARTI = 'configurazione/mapping/mapping_reparti.xml'
 FILE_MAPPING_ODC = [
-    'configurazione/mapping_venafro.xml',
-    'configurazione/mapping_larino.xml',
+    'configurazione/mapping/mapping_venafro.xml',
+    'configurazione/mapping/mapping_larino.xml',
 ]
-FILE_INDICATORI_ODC = 'configurazione/indicatori_ospedali_comunita_dm_77.xml'
-FILE_MEDICI_ATTO_AZIENDALE = 'configurazione/medici_atto_aziendale.xml'
-FILE_PROFILI_ATTO_AZIENDALE = 'configurazione/profili_atto_aziendale.xml'
-FILE_INDICATORI_AGENAS_MATERNO_INFANTILE = 'configurazione/indicatori_agenas_materno_infantile.xml'
-FILE_INDICATORI_AGENAS_RADIOLOGIA = 'configurazione/indicatori_agenas_radiologia.xml'
-FILE_INDICATORI_AGENAS_TRASFUSIONALE = 'configurazione/indicatori_agenas_trasfusionale.xml'
-FILE_INDICATORI_TRASFUSIONALE_SPECIALE = 'configurazione/indicatori_trasfusionale_speciale.xml'
-FILE_INDICATORI_AGENAS_ANATOMIA_PATOLOGICA = 'configurazione/indicatori_agenas_anatomia_patologica.xml'
-FILE_INDICATORI_AGENAS_LABORATORIO = 'configurazione/indicatori_agenas_laboratorio.xml'
-FILE_INDICATORI_AGENAS_TECNICI_LABORATORIO = 'configurazione/indicatori_agenas_tecnici_laboratorio.xml'
-FILE_INDICATORI_AGENAS_MEDICINA_LEGALE = 'configurazione/indicatori_agenas_medicina_legale.xml'
-FILE_INDICATORI_AGENAS_EMERGENZA_URGENZA = 'configurazione/indicatori_agenas_emergenza_urgenza.xml'
-FILE_INDICATORI_AGENAS_TERAPIA_INTENSIVA = 'configurazione/indicatori_agenas_terapia_intensiva.xml'
-FILE_INDICATORI_AGENAS_SALE_OPERATORIE = 'configurazione/indicatori_agenas_sale_operatorie.xml'
+
+# ── Indicatori AGENAS ────────────────────────────────────────
+FILE_INDICATORI_AGENAS_MATERNO_INFANTILE = 'configurazione/indicatori_agenas/indicatori_agenas_materno_infantile.xml'
+FILE_INDICATORI_AGENAS_RADIOLOGIA = 'configurazione/indicatori_agenas/indicatori_agenas_radiologia.xml'
+FILE_INDICATORI_AGENAS_TRASFUSIONALE = 'configurazione/indicatori_agenas/indicatori_agenas_trasfusionale.xml'
+FILE_INDICATORI_AGENAS_ANATOMIA_PATOLOGICA = 'configurazione/indicatori_agenas/indicatori_agenas_anatomia_patologica.xml'
+FILE_INDICATORI_AGENAS_LABORATORIO = 'configurazione/indicatori_agenas/indicatori_agenas_laboratorio.xml'
+FILE_INDICATORI_AGENAS_TECNICI_LABORATORIO = 'configurazione/indicatori_agenas/indicatori_agenas_tecnici_laboratorio.xml'
+FILE_INDICATORI_AGENAS_MEDICINA_LEGALE = 'configurazione/indicatori_agenas/indicatori_agenas_medicina_legale.xml'
+FILE_INDICATORI_AGENAS_EMERGENZA_URGENZA = 'configurazione/indicatori_agenas/indicatori_agenas_emergenza_urgenza.xml'
+FILE_INDICATORI_AGENAS_TERAPIA_INTENSIVA = 'configurazione/indicatori_agenas/indicatori_agenas_terapia_intensiva.xml'
+FILE_INDICATORI_AGENAS_SALE_OPERATORIE = 'configurazione/indicatori_agenas/indicatori_agenas_sale_operatorie.xml'
+
+# ── Altri indicatori ─────────────────────────────────────────
+FILE_INDICATORI = 'configurazione/indicatori/indicatori_medici.xml'
+FILE_INDICATORI_ODC = 'configurazione/indicatori/indicatori_ospedali_comunita_dm_77.xml'
+FILE_INDICATORI_TRASFUSIONALE_SPECIALE = 'configurazione/indicatori/indicatori_trasfusionale_speciale.xml'
 
 # ============================================================
 # DATI DI ATTIVITÀ PER PRESIDIO (indicatori AGENAS)
@@ -107,10 +115,10 @@ DETENUTI_PER_ISTITUTO = {
 # ============================================================
 # FILE INDICATORI AGENAS – SERVIZI TERRITORIALI
 # ============================================================
-FILE_INDICATORI_AGENAS_SALUTE_MENTALE = 'configurazione/indicatori_agenas_salute_mentale.xml'
-FILE_INDICATORI_AGENAS_DIPENDENZE = 'configurazione/indicatori_agenas_dipendenze.xml'
-FILE_INDICATORI_AGENAS_NPIA = 'configurazione/indicatori_agenas_npia.xml'
-FILE_INDICATORI_AGENAS_CARCERE = 'configurazione/indicatori_agenas_carcere.xml'
+FILE_INDICATORI_AGENAS_SALUTE_MENTALE = 'configurazione/indicatori_agenas/indicatori_agenas_salute_mentale.xml'
+FILE_INDICATORI_AGENAS_DIPENDENZE = 'configurazione/indicatori_agenas/indicatori_agenas_dipendenze.xml'
+FILE_INDICATORI_AGENAS_NPIA = 'configurazione/indicatori_agenas/indicatori_agenas_npia.xml'
+FILE_INDICATORI_AGENAS_CARCERE = 'configurazione/indicatori_agenas/indicatori_agenas_carcere.xml'
 
 # ============================================================
 # FILE DI OUTPUT
