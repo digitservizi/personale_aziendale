@@ -224,6 +224,8 @@ from src.riepilogo_agenas_aziendale import scrivi_foglio_riepilogo_agenas
 from src.riepilogo_fabbisogno_teorico import scrivi_foglio_riepilogo_fabbisogno_teorico
 from src.riepilogo_veterinari import scrivi_foglio_veterinari
 from src.nota_metodologica import _scrivi_foglio_metodologia
+from src.report_atto_aziendale import scrivi_foglio_riepilogo_atto_medici
+from src.report_profili_atto_aziendale import scrivi_foglio_riepilogo_atto_profili
 
 
 # ============================================================
@@ -252,7 +254,9 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
                  fabb_carcere=None,
                  indicatori_terapia_intensiva=None,
                  indicatori_sale_operatorie=None,
-                 lista_odc=None):
+                 lista_odc=None,
+                 mapper_atto_aziendale=None,
+                 profili_atto_xml=None):
     """Elaborazione principale dei dati del personale."""
 
     _data_esecuzione = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
@@ -1782,7 +1786,21 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
 
         auto_larghezza_colonne(ws_comp, all_columns_comp, larghezza_min=10)
 
-        # --- Foglio 4: FABBISOGNO AGENAS (riepilogo aziendale) ---
+        # --- Foglio 4: FABBISOGNO ATTO MEDICI ---
+        if mapper_atto_aziendale and os.path.exists(mapper_atto_aziendale):
+            scrivi_foglio_riepilogo_atto_medici(
+                wb_az, personale_file, pensionamenti_file,
+                mapper_atto_aziendale, anno_analisi,
+            )
+
+        # --- Foglio 5: FABBISOGNO ATTO ALTRI ---
+        if profili_atto_xml and os.path.exists(profili_atto_xml):
+            scrivi_foglio_riepilogo_atto_profili(
+                wb_az, personale_file, pensionamenti_file,
+                profili_atto_xml, anno_analisi,
+            )
+
+        # --- Foglio 6: FABBISOGNO AGENAS (riepilogo aziendale) ---
         scrivi_foglio_riepilogo_agenas(
             wb_az, grouped, livello_presidio,
             # Ospedaliere

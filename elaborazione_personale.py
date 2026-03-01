@@ -20,7 +20,6 @@ from src.config import (
     FILE_MEDICI_ATTO_AZIENDALE,
     FILE_PROFILI_ATTO_AZIENDALE,
     FILE_OUTPUT, FILE_DEBUG,
-    FILE_OUTPUT_ATTO_AZIENDALE, FILE_OUTPUT_PROFILI_ATTO_AZIENDALE,
     FILE_OUTPUT_ODC,
     FILE_INDICATORI_AGENAS_MATERNO_INFANTILE,
     PARTI_PER_PRESIDIO,
@@ -70,8 +69,6 @@ from src.posti_letto import (
     verifica_posti_letto_compilati,
 )
 from src.report_fabbisogno import process_data
-from src.report_atto_aziendale import genera_report_atto_aziendale
-from src.report_profili_atto_aziendale import genera_report_profili
 from src.report_odc import genera_report_odc
 
 
@@ -328,29 +325,11 @@ if __name__ == '__main__':
         indicatori_terapia_intensiva=indicatori_terapia_intensiva,
         indicatori_sale_operatorie=indicatori_sale_operatorie,
         lista_odc=lista_odc,
+        mapper_atto_aziendale=FILE_MEDICI_ATTO_AZIENDALE,
+        profili_atto_xml=FILE_PROFILI_ATTO_AZIENDALE,
     )
 
-    # STEP 4: Report medici – atto aziendale
-    if os.path.exists(FILE_MEDICI_ATTO_AZIENDALE):
-        genera_report_atto_aziendale(
-            personale_file=FILE_PERSONALE,
-            pensionamenti_file=FILE_PENSIONAMENTI,
-            mapper_atto_aziendale=FILE_MEDICI_ATTO_AZIENDALE,
-            output_file=FILE_OUTPUT_ATTO_AZIENDALE,
-            anno_analisi=ANNO_ANALISI,
-        )
-
-    # STEP 4-bis: Report profili (comparto + dirigenti non medici) – atto aziendale
-    if os.path.exists(FILE_PROFILI_ATTO_AZIENDALE):
-        genera_report_profili(
-            personale_file=FILE_PERSONALE,
-            pensionamenti_file=FILE_PENSIONAMENTI,
-            profili_atto_xml=FILE_PROFILI_ATTO_AZIENDALE,
-            output_file=FILE_OUTPUT_PROFILI_ATTO_AZIENDALE,
-            anno_analisi=ANNO_ANALISI,
-        )
-
-    # STEP 5: Report OdC – DM 77
+    # STEP 4: Report OdC – DM 77
     if lista_odc:
         genera_report_odc(
             personale_file=FILE_PERSONALE,

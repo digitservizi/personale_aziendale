@@ -126,7 +126,5 @@ FILE_INDICATORI_AGENAS_CARCERE = 'configurazione/indicatori_agenas/indicatori_ag
 DIR_ELABORATI = 'elaborati'
 
 FILE_OUTPUT = f'{DIR_ELABORATI}/analisi_personale_{ANNO_ANALISI}.xlsx'
-FILE_OUTPUT_ATTO_AZIENDALE = f'{DIR_ELABORATI}/analisi_medici_atto_aziendale_{ANNO_ANALISI}.xlsx'
-FILE_OUTPUT_PROFILI_ATTO_AZIENDALE = f'{DIR_ELABORATI}/analisi_profili_atto_aziendale_{ANNO_ANALISI}.xlsx'
 FILE_OUTPUT_ODC = f'{DIR_ELABORATI}/odc_dm77_{ANNO_ANALISI}.xlsx'
 FILE_DEBUG = f'{DIR_ELABORATI}/controprova_calcoli_{ANNO_ANALISI}.xlsx'

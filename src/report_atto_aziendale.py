@@ -4,11 +4,13 @@ Report medici – confronto dotazione da Atto Aziendale vs personale in servizio
 
 import pandas as pd
 from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment
 
 from src.stili_excel import (
     FILL_A, FILL_B,
     scrivi_titolo, scrivi_intestazioni, scrivi_riga_dati,
     scrivi_riga_totale, auto_larghezza_colonne,
+    ALIGN_CENTER,
 )
 from src.caricamento_dati import (
     carica_dataframe, normalizza_colonne_personale,
@@ -17,13 +19,60 @@ from src.caricamento_dati import (
 from src.caricamento_xml import carica_medici_atto_aziendale
 
 
-def genera_report_atto_aziendale(personale_file, pensionamenti_file,
-                                  mapper_atto_aziendale, output_file,
-                                  anno_analisi):
-    """
-    Genera un report XLSX della dirigenza medica confrontando
-    la dotazione da atto aziendale con il personale effettivo.
-    """
+# ─────────────────────────────────────────────────────────────
+# HELPER: scrive un DataFrame in un foglio con formattazione
+# ─────────────────────────────────────────────────────────────
+
+def _scrivi_foglio_atto(wb, sheet_name, df, titolo,
+                        col_gruppo='Disciplina'):
+    """Scrive *df* in un nuovo foglio del workbook con stile standard."""
+    ws = wb.create_sheet(title=sheet_name[:31])
+    cols = list(df.columns)
+    scrivi_titolo(ws, titolo, len(cols))
+    scrivi_intestazioni(ws, cols)
+    color_toggle = 0
+    prev_grp = None
+    last_row = 2
+    for r_idx, row_data in enumerate(df.itertuples(index=False), 3):
+        grp_idx = cols.index(col_gruppo) if col_gruppo in cols else 0
+        current_grp = row_data[grp_idx]
+        if current_grp != prev_grp:
+            color_toggle = 1 - color_toggle
+            prev_grp = current_grp
+        scrivi_riga_dati(
+            ws, r_idx, list(row_data),
+            FILL_A if color_toggle else FILL_B,
+        )
+        last_row = r_idx
+
+    # Riga totale
+    if not df.empty:
+        tot_row = last_row + 1
+        totali = []
+        for c in cols:
+            if c == col_gruppo:
+                totali.append('TOTALE')
+            elif df[c].dtype in ('int64', 'float64'):
+                totali.append(int(df[c].sum()))
+            else:
+                try:
+                    s = pd.to_numeric(df[c], errors='coerce').sum()
+                    totali.append(int(s) if pd.notna(s) and s != 0 else '')
+                except Exception:
+                    totali.append('')
+        scrivi_riga_totale(ws, tot_row, totali)
+
+    auto_larghezza_colonne(ws, cols)
+
+
+# ─────────────────────────────────────────────────────────────
+# CALCOLO DATI (logica pura, nessuna scrittura Excel)
+# ─────────────────────────────────────────────────────────────
+
+def _calcola_report_atto_medici(personale_file, pensionamenti_file,
+                                 mapper_atto_aziendale, anno_analisi):
+    """Calcola i dati del report medici e ritorna (df_atto, df_fuori)."""
+
     print(f"\n{'=' * 70}")
     print("REPORT MEDICI - ATTO AZIENDALE vs PERSONALE IN SERVIZIO")
     print(f"{'=' * 70}\n")
@@ -266,47 +315,24 @@ def genera_report_atto_aziendale(personale_file, pensionamenti_file,
         columns=['Dotazione Atto', 'Delta'], errors='ignore'
     )
 
-    # Genera XLSX
-    def _scrivi_foglio_atto(wb, sheet_name, df, titolo,
-                             col_gruppo='Disciplina'):
-        ws = wb.create_sheet(title=sheet_name[:31])
-        cols = list(df.columns)
-        scrivi_titolo(ws, titolo, len(cols))
-        scrivi_intestazioni(ws, cols)
-        color_toggle = 0
-        prev_grp = None
-        last_row = 2
-        for r_idx, row_data in enumerate(df.itertuples(index=False), 3):
-            grp_idx = cols.index(col_gruppo) if col_gruppo in cols else 0
-            current_grp = row_data[grp_idx]
-            if current_grp != prev_grp:
-                color_toggle = 1 - color_toggle
-                prev_grp = current_grp
-            scrivi_riga_dati(
-                ws, r_idx, list(row_data),
-                FILL_A if color_toggle else FILL_B,
-            )
-            last_row = r_idx
+    return df_atto, df_fuori
 
-        # Riga totale
-        if not df.empty:
-            tot_row = last_row + 1
-            totali = []
-            for c in cols:
-                if c == col_gruppo:
-                    totali.append('TOTALE')
-                elif df[c].dtype in ('int64', 'float64'):
-                    totali.append(int(df[c].sum()))
-                else:
-                    # Prova a sommare valori numerici, altrimenti lascia vuoto
-                    try:
-                        s = pd.to_numeric(df[c], errors='coerce').sum()
-                        totali.append(int(s) if pd.notna(s) and s != 0 else '')
-                    except Exception:
-                        totali.append('')
-            scrivi_riga_totale(ws, tot_row, totali)
 
-        auto_larghezza_colonne(ws, cols)
+# ─────────────────────────────────────────────────────────────
+# FUNZIONE PUBBLICA – report standalone (file XLSX separato)
+# ─────────────────────────────────────────────────────────────
+
+def genera_report_atto_aziendale(personale_file, pensionamenti_file,
+                                  mapper_atto_aziendale, output_file,
+                                  anno_analisi):
+    """
+    Genera un report XLSX standalone della dirigenza medica confrontando
+    la dotazione da atto aziendale con il personale effettivo.
+    """
+    df_atto, df_fuori = _calcola_report_atto_medici(
+        personale_file, pensionamenti_file, mapper_atto_aziendale,
+        anno_analisi,
+    )
 
     wb = Workbook()
     wb.remove(wb.active)
@@ -324,5 +350,115 @@ def genera_report_atto_aziendale(personale_file, pensionamenti_file,
     report_df = pd.concat([df_atto, df_fuori], ignore_index=True)
     print(f"\n  Report salvato in: {output_file}")
     print(f"{'=' * 70}\n")
-
     return report_df
+
+
+# ─────────────────────────────────────────────────────────────
+# FUNZIONE PUBBLICA – foglio nel riepilogo aziendale
+# ─────────────────────────────────────────────────────────────
+
+def scrivi_foglio_riepilogo_atto_medici(wb, personale_file,
+                                         pensionamenti_file,
+                                         mapper_atto_aziendale,
+                                         anno_analisi):
+    """Aggiunge il foglio 'FABBISOGNO ATTO MEDICI' al workbook
+    del riepilogo aziendale. Combina requisiti e discipline fuori
+    atto in un unico foglio."""
+    df_atto, df_fuori = _calcola_report_atto_medici(
+        personale_file, pensionamenti_file, mapper_atto_aziendale,
+        anno_analisi,
+    )
+
+    ws = wb.create_sheet(title='FABBISOGNO ATTO MEDICI')
+
+    # ── Sezione 1: Requisiti da Atto Aziendale ────────────────
+    cols_atto = list(df_atto.columns)
+    scrivi_titolo(
+        ws,
+        f'Personale Medico – Atto Aziendale vs Personale ({anno_analisi})',
+        len(cols_atto),
+    )
+    scrivi_intestazioni(ws, cols_atto)
+
+    row = 3
+    color_toggle = 0
+    prev_grp = None
+    for row_data in df_atto.itertuples(index=False):
+        current_grp = row_data[0]
+        if current_grp != prev_grp:
+            color_toggle = 1 - color_toggle
+            prev_grp = current_grp
+        scrivi_riga_dati(
+            ws, row, list(row_data),
+            FILL_A if color_toggle else FILL_B,
+        )
+        row += 1
+
+    # Riga totale atto
+    if not df_atto.empty:
+        totali = []
+        for c in cols_atto:
+            if c == 'Disciplina':
+                totali.append('TOTALE ATTO')
+            elif df_atto[c].dtype in ('int64', 'float64'):
+                totali.append(int(df_atto[c].sum()))
+            else:
+                try:
+                    s = pd.to_numeric(df_atto[c], errors='coerce').sum()
+                    totali.append(int(s) if pd.notna(s) and s != 0 else '')
+                except Exception:
+                    totali.append('')
+        scrivi_riga_totale(ws, row, totali)
+        row += 1
+
+    # ── Sezione 2: Discipline fuori Atto ──────────────────────
+    if not df_fuori.empty:
+        row += 1  # riga vuota di separazione
+
+        cols_fuori = list(df_fuori.columns)
+        ws.merge_cells(
+            start_row=row, start_column=1,
+            end_row=row, end_column=len(cols_fuori),
+        )
+        cell = ws.cell(
+            row=row, column=1,
+            value='DISCIPLINE FUORI ATTO AZIENDALE',
+        )
+        cell.font = Font(bold=True, size=12)
+        cell.alignment = ALIGN_CENTER
+        row += 1
+
+        scrivi_intestazioni(ws, cols_fuori, riga=row)
+        row += 1
+
+        color_toggle = 0
+        prev_grp = None
+        for row_data in df_fuori.itertuples(index=False):
+            current_grp = row_data[0]
+            if current_grp != prev_grp:
+                color_toggle = 1 - color_toggle
+                prev_grp = current_grp
+            scrivi_riga_dati(
+                ws, row, list(row_data),
+                FILL_A if color_toggle else FILL_B,
+            )
+            row += 1
+
+        # Riga totale fuori atto
+        totali_f = []
+        for c in cols_fuori:
+            if c == 'Disciplina':
+                totali_f.append('TOTALE FUORI ATTO')
+            elif df_fuori[c].dtype in ('int64', 'float64'):
+                totali_f.append(int(df_fuori[c].sum()))
+            else:
+                try:
+                    s = pd.to_numeric(df_fuori[c], errors='coerce').sum()
+                    totali_f.append(
+                        int(s) if pd.notna(s) and s != 0 else ''
+                    )
+                except Exception:
+                    totali_f.append('')
+        scrivi_riga_totale(ws, row, totali_f)
+
+    auto_larghezza_colonne(ws, cols_atto)
