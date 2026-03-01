@@ -1,6 +1,7 @@
 """
 Caricamento e normalizzazione dei DataFrame (personale, pensionamenti).
-Include il mapping delle qualifiche professionali da XML.
+Include il mapping delle qualifiche professionali da profili_atto_aziendale.xml
+(unico punto di verità per dotazione e raggruppamento qualifiche).
 """
 
 import os
@@ -9,7 +10,7 @@ import xml.etree.ElementTree as ET
 
 import pandas as pd
 
-from src.config import FILE_MAPPING_QUALIFICHE
+from src.config import FILE_PROFILI_ATTO_AZIENDALE
 
 # ============================================================
 # REGEX per pulizia prefisso DESC_TIPO_CDC
@@ -24,27 +25,62 @@ _PREFISSI_CDC = re.compile(
 
 
 # ============================================================
-# MAPPING QUALIFICHE
+# MAPPING QUALIFICHE (da profili_atto_aziendale.xml)
 # ============================================================
 
 def carica_mapping_qualifiche(xml_file):
     """
-    Carica le regole di mapping qualifiche dal file XML.
+    Carica le regole di mapping qualifiche da profili_atto_aziendale.xml.
+
+    Ogni <profilo> contiene:
+      - <nome_atto>: il valore PROFILO_RAGGRUPPATO risultante
+      - <qualifiche_db>/<prefisso>: i prefissi DESC_QUALI che matchano (startswith)
+
     Restituisce una lista di tuple (prefisso_upper, categoria).
+    L'ordine segue quello dell'XML; i prefissi più lunghi vengono
+    anteposti per garantire un match più specifico.
     """
     tree = ET.parse(xml_file)
     root = tree.getroot()
     regole = []
-    for regola in root.findall('regola'):
-        prefisso = regola.get('prefisso', '').strip().upper()
-        categoria = regola.get('categoria', '').strip()
-        if prefisso and categoria:
-            regole.append((prefisso, categoria))
+    for profilo in root.findall('profilo'):
+        categoria = profilo.findtext('nome_atto', '').strip()
+        sezione = profilo.find('qualifiche_db')
+        if sezione is not None and categoria:
+            for pref_elem in sezione.findall('prefisso'):
+                prefisso = pref_elem.text.strip().upper() if pref_elem.text else ''
+                if prefisso:
+                    regole.append((prefisso, categoria))
+    # Ordina per lunghezza prefisso decrescente → match più specifico prima
+    regole.sort(key=lambda r: len(r[0]), reverse=True)
     return regole
 
 
+def carica_discipline_overrides(xml_file):
+    """
+    Carica eventuali override basati su DESC_DISCIPLINE.
+
+    Alcuni profili (es. Avvocati) hanno DESC_QUALI identica ad
+    altri raggruppamenti ma si distinguono per DESC_DISCIPLINE.
+    Restituisce un dict  {disciplina_upper: nome_atto}.
+    """
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+    overrides = {}
+    for profilo in root.findall('profilo'):
+        categoria = profilo.findtext('nome_atto', '').strip()
+        sezione = profilo.find('discipline_db')
+        if sezione is not None and categoria:
+            for disc_elem in sezione.findall('disciplina'):
+                disc = disc_elem.text.strip().upper() if disc_elem.text else ''
+                if disc:
+                    overrides[disc] = categoria
+    return overrides
+
+
 # Carica regole all'avvio del modulo
-_MAPPING_QUALI_RULES = carica_mapping_qualifiche(FILE_MAPPING_QUALIFICHE)
+_MAPPING_QUALI_RULES = carica_mapping_qualifiche(FILE_PROFILI_ATTO_AZIENDALE)
+_DISCIPLINE_OVERRIDES = carica_discipline_overrides(FILE_PROFILI_ATTO_AZIENDALE)
 
 
 def mappa_qualifica(desc_quali):
@@ -117,6 +153,14 @@ def normalizza_colonne_personale(df):
         df['PROFILO_RAGGRUPPATO'] = df['DESC_QUALI'].apply(mappa_qualifica)
     elif 'DESC_PROFILO_PROFESSIONALE' in df.columns:
         df['PROFILO_RAGGRUPPATO'] = df['DESC_PROFILO_PROFESSIONALE']
+
+    # Override basati su DESC_DISCIPLINE (es. Avvocati)
+    if _DISCIPLINE_OVERRIDES and 'DESC_DISCIPLINE' in df.columns:
+        disc_upper = df['DESC_DISCIPLINE'].astype(str).str.strip().str.upper()
+        for disc_val, categoria in _DISCIPLINE_OVERRIDES.items():
+            mask = disc_upper == disc_val
+            if mask.any():
+                df.loc[mask, 'PROFILO_RAGGRUPPATO'] = categoria
 
     return df
 

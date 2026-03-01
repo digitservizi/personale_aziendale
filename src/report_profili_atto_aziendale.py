@@ -1,5 +1,9 @@
 """
-Report medici – confronto dotazione da Atto Aziendale vs personale in servizio.
+Report profili professionali – confronto dotazione da Atto Aziendale
+vs personale in servizio (comparto + dirigenti non medici).
+
+Esclude Dirigente Medico e Dirigente Veterinario, già coperti dal
+report medici (report_atto_aziendale.py).
 """
 
 import pandas as pd
@@ -14,38 +18,33 @@ from src.caricamento_dati import (
     carica_dataframe, normalizza_colonne_personale,
     normalizza_colonne_pensionamenti,
 )
-from src.caricamento_xml import carica_medici_atto_aziendale
+from src.caricamento_xml import carica_profili_atto_aziendale
+
+# Profili trattati nel report medici – li escludiamo qui
+_PROFILI_MEDICI = {'DIRIGENTE MEDICO', 'DIRIGENTE VETERINARIO'}
 
 
-def genera_report_atto_aziendale(personale_file, pensionamenti_file,
-                                  mapper_atto_aziendale, output_file,
-                                  anno_analisi):
+def genera_report_profili(personale_file, pensionamenti_file,
+                          profili_atto_xml, output_file, anno_analisi):
     """
-    Genera un report XLSX della dirigenza medica confrontando
-    la dotazione da atto aziendale con il personale effettivo.
+    Genera un report XLSX per comparto e dirigenti non medici
+    confrontando la dotazione da atto aziendale con il personale
+    effettivo, suddiviso per tipologia contrattuale.
     """
     print(f"\n{'=' * 70}")
-    print("REPORT MEDICI - ATTO AZIENDALE vs PERSONALE IN SERVIZIO")
+    print("REPORT PROFILI - ATTO AZIENDALE vs PERSONALE IN SERVIZIO")
     print(f"{'=' * 70}\n")
 
-    # Carica personale
+    # ── Carica personale ─────────────────────────────────────────
     personale_df = carica_dataframe(personale_file)
     personale_df = normalizza_colonne_personale(personale_df)
 
-    # Tutti i dirigenti medici + veterinari (qualsiasi natura)
-    medici_all = personale_df[
-        personale_df['PROFILO_RAGGRUPPATO'].str.upper().isin(
-            ['DIRIGENTE MEDICO', 'DIRIGENTE VETERINARIO']
-        )
+    # Escludi i profili medici (già nel report dedicato)
+    personale_df = personale_df[
+        ~personale_df['PROFILO_RAGGRUPPATO'].str.upper().isin(_PROFILI_MEDICI)
     ].copy()
-    medici_all['DISC_UPPER'] = (
-        medici_all['DESC_DISCIPLINE'].str.upper().str.strip()
-    )
-    # Medici senza disciplina specificata → catch-all "Dirigente medico"
-    medici_all['DISC_UPPER'] = medici_all['DISC_UPPER'].fillna('DIRIGENTE MEDICO')
-    natura_upper = medici_all['DESC_NATURA'].str.upper()
 
-    # Classificazione per tipologia contrattuale
+    natura_upper = personale_df['DESC_NATURA'].str.upper()
     mask_ti_puro = natura_upper == 'TEMPO INDETERMINATO'
     mask_cmd = natura_upper.str.startswith('COMANDATO IN USCITA')
     mask_penit = natura_upper == 'PENITENZIARIO INDETERMINATO'
@@ -59,45 +58,54 @@ def genera_report_atto_aziendale(personale_file, pensionamenti_file,
     mask_td = mask_td_puro | mask_octies
     mask_univ = natura_upper.isin(['UNIVERSITARI H19', 'T.D. SPECIALIZZANDI'])
 
-    medici_ti = medici_all[mask_ti]
+    personale_ti = personale_df[mask_ti]
 
-    # Pensionamenti (su tutto il personale)
+    # ── Pensionamenti (su tutto il personale) ────────────────────
     pensionamenti_df = carica_dataframe(pensionamenti_file)
     pensionamenti_df = normalizza_colonne_pensionamenti(pensionamenti_df)
 
-    medici_all_pens = medici_all.copy()
-    if 'DT_CESSAZIONE' in medici_all_pens.columns:
-        medici_all_pens = medici_all_pens.rename(
+    pers_all_pens = personale_df.copy()
+    if 'DT_CESSAZIONE' in pers_all_pens.columns:
+        pers_all_pens = pers_all_pens.rename(
             columns={'DT_CESSAZIONE': 'DT_CESSAZIONE_PERS'}
         )
-    medici_all_pens = pd.merge(
-        medici_all_pens,
+    pers_all_pens = pd.merge(
+        pers_all_pens,
         pensionamenti_df[['MATR.', 'DT_CESSAZIONE']],
         on='MATR.',
         how='left',
     )
 
-    anni_pensionamento = [anno_analisi + 1, anno_analisi + 2, anno_analisi + 3]
+    anni_pens = [anno_analisi + 1, anno_analisi + 2, anno_analisi + 3]
 
-    # Mapper atto aziendale
-    mapper = carica_medici_atto_aziendale(mapper_atto_aziendale)
-    print(f"Discipline da atto aziendale: {len(mapper)}")
-    print(f"Dirigenti nel DB: {len(medici_all)}  "
+    # ── Carica profili da atto aziendale ────────────────────────
+    profili = carica_profili_atto_aziendale(profili_atto_xml)
+
+    # Filtra via i profili medici
+    profili = [p for p in profili
+               if p['nome_atto'].upper() not in _PROFILI_MEDICI]
+
+    print(f"Profili da atto aziendale: {len(profili)}")
+    print(f"Personale non medico nel DB: {len(personale_df)}  "
           f"(TI: {mask_ti.sum()} di cui Cmd: {mask_cmd.sum()}, "
           f"TD: {mask_td.sum()} di cui 15Oct: {mask_octies.sum()}, "
           f"Univ/Spec: {mask_univ.sum()})\n")
 
-    # Costruisci il report
+    # ── Costruisci righe report ─────────────────────────────────
     righe_report = []
-    discipline_db_mappate = set()
+    profili_db_mappati = set()
 
-    for disc in mapper:
-        nome_atto = disc['nome_atto']
-        dotazione = disc['dotazione']
-        voci_db = disc['discipline_db']
+    for prof in profili:
+        nome_atto = prof['nome_atto']
+        dotazione = prof['dotazione']
 
-        m_all = medici_all[medici_all['DISC_UPPER'].isin(voci_db)]
-        nat = m_all['DESC_NATURA'].str.upper()
+        # Match per PROFILO_RAGGRUPPATO (case-insensitive)
+        mask_prof = (
+            personale_df['PROFILO_RAGGRUPPATO'].str.upper() == nome_atto.upper()
+        )
+        df_prof = personale_df[mask_prof]
+
+        nat = df_prof['DESC_NATURA'].str.upper()
         n_cmd = int(nat.str.startswith('COMANDATO IN USCITA').sum())
         n_td_puro = int(nat.isin([
             'TEMPO DETERMINATO',
@@ -108,21 +116,25 @@ def genera_report_atto_aziendale(personale_file, pensionamenti_file,
         n_univ = int(nat.isin([
             'UNIVERSITARI H19', 'T.D. SPECIALIZZANDI',
         ]).sum())
-        n_tot = len(m_all)               # headcount effettivo
-        n_ti = n_tot - n_td - n_univ     # residuale → TI
+        n_tot = len(df_prof)              # headcount effettivo
+        n_ti = n_tot - n_td - n_univ      # residuale → TI
         delta = n_tot - dotazione
 
         # Pensionamenti
-        m_ti_disc = medici_all_pens[medici_all_pens['DISC_UPPER'].isin(voci_db)]
-        dt_cess = pd.to_datetime(m_ti_disc['DT_CESSAZIONE'], errors='coerce')
+        df_ti_prof = pers_all_pens[
+            pers_all_pens['PROFILO_RAGGRUPPATO'].str.upper() == nome_atto.upper()
+        ]
+        dt_cess = pd.to_datetime(
+            df_ti_prof['DT_CESSAZIONE'], errors='coerce'
+        )
         pens = {}
-        for anno in anni_pensionamento:
+        for anno in anni_pens:
             pens[anno] = int((dt_cess.dt.year == anno).sum())
 
-        discipline_db_mappate.update(voci_db)
+        profili_db_mappati.add(nome_atto.upper())
 
         riga = {
-            'DISCIPLINA_ATTO_AZIENDALE': nome_atto,
+            'PROFILO': nome_atto,
             'DOTAZIONE_ATTO': dotazione,
             'TI': n_ti,
             'CMD_TI': n_cmd,
@@ -132,13 +144,12 @@ def genera_report_atto_aziendale(personale_file, pensionamenti_file,
             'TOTALE': n_tot,
             'DELTA': delta,
         }
-        for anno in anni_pensionamento:
+        for anno in anni_pens:
             riga[f'PENSIONAMENTI_{anno}'] = pens[anno]
-
-        pens_cumulati = 0
-        for anno in anni_pensionamento:
-            pens_cumulati += pens[anno]
-            riga[f'PROIEZIONE_{anno}'] = n_tot - pens_cumulati
+        pens_cum = 0
+        for anno in anni_pens:
+            pens_cum += pens[anno]
+            riga[f'PROIEZIONE_{anno}'] = n_tot - pens_cum
 
         righe_report.append(riga)
 
@@ -146,24 +157,30 @@ def genera_report_atto_aziendale(personale_file, pensionamenti_file,
         cmd_str = f"(cmd:{n_cmd})" if n_cmd else ""
         oct_str = f"(oct:{n_octies})" if n_octies else ""
         print(
-            f"  {nome_atto:45s}  Atto: {dotazione:3d}  "
-            f"TI: {n_ti:3d}{cmd_str:>7s}  TD: {n_td:2d}{oct_str:>7s}  "
-            f"U/S: {n_univ:2d}  Tot: {n_tot:3d}  Delta: {delta:+4d}  [{stato}]"
+            f"  {nome_atto:45s}  Atto: {dotazione:4d}  "
+            f"TI: {n_ti:4d}{cmd_str:>7s}  TD: {n_td:3d}{oct_str:>7s}  "
+            f"U/S: {n_univ:3d}  Tot: {n_tot:4d}  Delta: {delta:+5d}  [{stato}]"
         )
 
-    # Discipline non mappate
-    tutte_disc_db = set(medici_all['DISC_UPPER'].dropna().unique())
-    non_mappate = tutte_disc_db - discipline_db_mappate
-    medici_non_mappati = medici_all[medici_all['DISC_UPPER'].isin(non_mappate)]
+    # ── Profili non mappati (presenti nel DB ma fuori atto) ─────
+    profili_db_tutti = set(
+        personale_df['PROFILO_RAGGRUPPATO'].str.upper().dropna().unique()
+    )
+    non_mappati = profili_db_tutti - profili_db_mappati - _PROFILI_MEDICI
+    pers_non_mappati = personale_df[
+        personale_df['PROFILO_RAGGRUPPATO'].str.upper().isin(non_mappati)
+    ]
 
-    if non_mappate:
+    if non_mappati:
         print(
-            f"\n  --- Discipline fuori dall'atto aziendale "
-            f"({len(medici_non_mappati)} medici) ---"
+            f"\n  --- Profili fuori dall'atto aziendale "
+            f"({len(pers_non_mappati)} dipendenti) ---"
         )
-        for disc_nm in sorted(non_mappate):
-            m_nm = medici_all[medici_all['DISC_UPPER'] == disc_nm]
-            nat_nm = m_nm['DESC_NATURA'].str.upper()
+        for prof_nm in sorted(non_mappati):
+            df_nm = personale_df[
+                personale_df['PROFILO_RAGGRUPPATO'].str.upper() == prof_nm
+            ]
+            nat_nm = df_nm['DESC_NATURA'].str.upper()
             n_cmd = int(nat_nm.str.startswith('COMANDATO IN USCITA').sum())
             n_td_puro = int(nat_nm.isin([
                 'TEMPO DETERMINATO',
@@ -174,17 +191,21 @@ def genera_report_atto_aziendale(personale_file, pensionamenti_file,
             n_univ = int(nat_nm.isin([
                 'UNIVERSITARI H19', 'T.D. SPECIALIZZANDI',
             ]).sum())
-            n_tot = len(m_nm)
+            n_tot = len(df_nm)
             n_ti = n_tot - n_td - n_univ
 
-            m_ti_nm = medici_all_pens[medici_all_pens['DISC_UPPER'] == disc_nm]
-            dt_cess_nm = pd.to_datetime(m_ti_nm['DT_CESSAZIONE'], errors='coerce')
+            df_ti_nm = pers_all_pens[
+                pers_all_pens['PROFILO_RAGGRUPPATO'].str.upper() == prof_nm
+            ]
+            dt_cess_nm = pd.to_datetime(
+                df_ti_nm['DT_CESSAZIONE'], errors='coerce'
+            )
             pens_nm = {}
-            for anno in anni_pensionamento:
+            for anno in anni_pens:
                 pens_nm[anno] = int((dt_cess_nm.dt.year == anno).sum())
 
             riga = {
-                'DISCIPLINA_ATTO_AZIENDALE': f'[FUORI ATTO] {disc_nm}',
+                'PROFILO': f'[FUORI ATTO] {prof_nm}',
                 'DOTAZIONE_ATTO': '-',
                 'TI': n_ti,
                 'CMD_TI': n_cmd,
@@ -194,20 +215,26 @@ def genera_report_atto_aziendale(personale_file, pensionamenti_file,
                 'TOTALE': n_tot,
                 'DELTA': '-',
             }
-            for anno in anni_pensionamento:
+            for anno in anni_pens:
                 riga[f'PENSIONAMENTI_{anno}'] = pens_nm[anno]
             pens_cum = 0
-            for anno in anni_pensionamento:
+            for anno in anni_pens:
                 pens_cum += pens_nm[anno]
                 riga[f'PROIEZIONE_{anno}'] = n_tot - pens_cum
             righe_report.append(riga)
 
             cmd_str = f"(cmd:{n_cmd})" if n_cmd else ""
             oct_str = f"(oct:{n_octies})" if n_octies else ""
-            print(f"  {disc_nm:45s}  TI: {n_ti:3d}{cmd_str:>7s}  TD: {n_td:2d}{oct_str:>7s}  U/S: {n_univ:2d}")
+            print(
+                f"  {prof_nm:45s}  TI: {n_ti:4d}{cmd_str:>7s}  TD: {n_td:3d}{oct_str:>7s}  "
+                f"U/S: {n_univ:3d}"
+            )
 
-    # Totali
-    tot_dot = sum(r['DOTAZIONE_ATTO'] for r in righe_report if isinstance(r['DOTAZIONE_ATTO'], int))
+    # ── Totali ──────────────────────────────────────────────────
+    tot_dot = sum(
+        r['DOTAZIONE_ATTO'] for r in righe_report
+        if isinstance(r['DOTAZIONE_ATTO'], int)
+    )
     tot_ti = sum(r['TI'] for r in righe_report)
     tot_cmd = sum(r['CMD_TI'] for r in righe_report)
     tot_td = sum(r['TD'] for r in righe_report)
@@ -217,17 +244,17 @@ def genera_report_atto_aziendale(personale_file, pensionamenti_file,
     cmd_str = f"(cmd:{tot_cmd})" if tot_cmd else ""
     oct_str = f"(oct:{tot_oct})" if tot_oct else ""
     print(
-        f"\n  {'TOTALE':45s}  Atto: {tot_dot:3d}  "
-        f"TI: {tot_ti:3d}{cmd_str:>7s}  TD: {tot_td:2d}{oct_str:>7s}  "
-        f"U/S: {tot_us:2d}  Tot: {tot_all:3d}  Delta: {tot_all - tot_dot:+4d}"
+        f"\n  {'TOTALE':45s}  Atto: {tot_dot:4d}  "
+        f"TI: {tot_ti:4d}{cmd_str:>7s}  TD: {tot_td:3d}{oct_str:>7s}  "
+        f"U/S: {tot_us:3d}  Tot: {tot_all:4d}  Delta: {tot_all - tot_dot:+5d}"
     )
-    print(f"  Medici in discipline fuori atto: {len(medici_non_mappati)}")
-    print(f"  Totale dirigenti nel DB: {len(medici_all)}")
+    print(f"  Profili fuori atto: {len(pers_non_mappati)}")
+    print(f"  Totale non medici nel DB: {len(personale_df)}")
 
-    # Rinomina colonne
+    # ── Rinomina colonne ────────────────────────────────────────
     def rinomina_colonne(df):
         rename = {
-            'DISCIPLINA_ATTO_AZIENDALE': 'Disciplina',
+            'PROFILO': 'Profilo',
             'DOTAZIONE_ATTO': 'Dotazione Atto',
             'TI': 'Tempo Indeterminato',
             'CMD_TI': 'di cui Cmd. Uscita',
@@ -237,27 +264,23 @@ def genera_report_atto_aziendale(personale_file, pensionamenti_file,
             'TOTALE': 'Totale',
             'DELTA': 'Delta',
         }
-        for anno in anni_pensionamento:
+        for anno in anni_pens:
             rename[f'PENSIONAMENTI_{anno}'] = f'Pensionamenti {anno}'
             rename[f'PROIEZIONE_{anno}'] = f'Proiezione {anno}'
         return df.rename(columns=rename)
 
     df_atto = pd.DataFrame(
         [r for r in righe_report
-         if not str(r.get('DISCIPLINA_ATTO_AZIENDALE', '')).startswith(
-             '[FUORI ATTO]'
-         )]
+         if not str(r.get('PROFILO', '')).startswith('[FUORI ATTO]')]
     )
     df_fuori = pd.DataFrame(
         [r for r in righe_report
-         if str(r.get('DISCIPLINA_ATTO_AZIENDALE', '')).startswith(
-             '[FUORI ATTO]'
-         )]
+         if str(r.get('PROFILO', '')).startswith('[FUORI ATTO]')]
     )
     if not df_fuori.empty:
         df_fuori = df_fuori.copy()
-        df_fuori['DISCIPLINA_ATTO_AZIENDALE'] = (
-            df_fuori['DISCIPLINA_ATTO_AZIENDALE']
+        df_fuori['PROFILO'] = (
+            df_fuori['PROFILO']
             .str.replace(r'^\[FUORI ATTO\] ', '', regex=True)
         )
 
@@ -266,9 +289,8 @@ def genera_report_atto_aziendale(personale_file, pensionamenti_file,
         columns=['Dotazione Atto', 'Delta'], errors='ignore'
     )
 
-    # Genera XLSX
-    def _scrivi_foglio_atto(wb, sheet_name, df, titolo,
-                             col_gruppo='Disciplina'):
+    # ── Genera XLSX ─────────────────────────────────────────────
+    def _scrivi_foglio(wb, sheet_name, df, titolo, col_gruppo='Profilo'):
         ws = wb.create_sheet(title=sheet_name[:31])
         cols = list(df.columns)
         scrivi_titolo(ws, titolo, len(cols))
@@ -298,7 +320,6 @@ def genera_report_atto_aziendale(personale_file, pensionamenti_file,
                 elif df[c].dtype in ('int64', 'float64'):
                     totali.append(int(df[c].sum()))
                 else:
-                    # Prova a sommare valori numerici, altrimenti lascia vuoto
                     try:
                         s = pd.to_numeric(df[c], errors='coerce').sum()
                         totali.append(int(s) if pd.notna(s) and s != 0 else '')
@@ -310,14 +331,14 @@ def genera_report_atto_aziendale(personale_file, pensionamenti_file,
 
     wb = Workbook()
     wb.remove(wb.active)
-    _scrivi_foglio_atto(
+    _scrivi_foglio(
         wb, 'Requisiti Atto Aziendale', df_atto,
-        'Personale Medico - Requisiti da Atto Aziendale',
+        'Comparto e Dirigenza Non Medica - Atto Aziendale',
     )
     if not df_fuori.empty:
-        _scrivi_foglio_atto(
+        _scrivi_foglio(
             wb, 'Fuori Atto Aziendale', df_fuori,
-            'Personale Medico - Discipline Fuori Atto Aziendale',
+            'Profili Fuori Atto Aziendale',
         )
     wb.save(output_file)
 

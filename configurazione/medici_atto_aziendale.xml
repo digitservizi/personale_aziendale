@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   MAPPER MEDICI - ATTO AZIENDALE ASREM
+  Fonte: tabella "Discipline dei dirigenti medici" – Dotazione organica complessiva 828
   
   Mappa le discipline dell'atto aziendale ai valori reali della colonna
   DESC_DISCIPLINE del DB del personale (normalizzati UPPER).
@@ -15,8 +16,20 @@
 -->
 <MediciAttoAziendale>
 
+  <!-- ============================================================
+       Totale dotazione organica medici da atto aziendale: 828
+       ============================================================ -->
+
   <disciplina>
-    <nome_atto>Anestesia e rianimazione</nome_atto>
+    <nome_atto>Anatomia Patologica</nome_atto>
+    <dotazione>7</dotazione>
+    <discipline_db>
+      <voce>ANATOMIA PATOLOGICA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Anestesia e Rianimazione</nome_atto>
     <dotazione>64</dotazione>
     <discipline_db>
       <voce>ANESTESIA E RIANIMAZIONE</voce>
@@ -40,10 +53,91 @@
   </disciplina>
 
   <disciplina>
+    <nome_atto>Chirurgia Plastica</nome_atto>
+    <dotazione>1</dotazione>
+    <discipline_db>
+      <voce>CHIRURGIA PLASTICA</voce>
+      <voce>CHIRURGIA PLASTICA E RICOSTRUTTIVA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
     <nome_atto>Chirurgia Vascolare</nome_atto>
     <dotazione>7</dotazione>
     <discipline_db>
       <voce>CHIRURGIA VASCOLARE</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Dermatologia</nome_atto>
+    <dotazione>4</dotazione>
+    <discipline_db>
+      <voce>DERMATOLOGIA</voce>
+      <voce>DERMATOLOGIA E VENEROLOGIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Dirigente medico</nome_atto>
+    <dotazione>13</dotazione>
+    <discipline_db>
+      <voce>DIRIGENTE MEDICO</voce>
+      <voce>DIREZIONE MEDICA DI PRESIDIO OSPEDALIERO</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Dirigente sanitario</nome_atto>
+    <dotazione>1</dotazione>
+    <discipline_db>
+      <voce>DIRIGENTE SANITARIO</voce>
+      <voce>DIREZIONE SANITARIA DI PRESIDIO OSPEDALIERO</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Ematologia</nome_atto>
+    <dotazione>1</dotazione>
+    <discipline_db>
+      <voce>EMATOLOGIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Endocrinologia</nome_atto>
+    <dotazione>7</dotazione>
+    <discipline_db>
+      <voce>ENDOCRINOLOGIA</voce>
+      <voce>MALATTIE METABOLICHE E DIABETOLOGIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Farmacologia e Tossicologia</nome_atto>
+    <dotazione>18</dotazione>
+    <discipline_db>
+      <voce>FARMACOLOGIA E TOSSICOLOGIA</voce>
+      <voce>FARMACOLOGIA E TOSSICOLOGIA CLINICA</voce>
+      <voce>FARMACOLOGIA CLINICA E TOSSICOLOGIA</voce>
+      <voce>FARMACOLOGIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Fisiatria</nome_atto>
+    <dotazione>27</dotazione>
+    <discipline_db>
+      <voce>MEDICINA FISICA E RIABILITAZIONE</voce>
+      <voce>FISIATRIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Gastroenterologia</nome_atto>
+    <dotazione>12</dotazione>
+    <discipline_db>
+      <voce>GASTROENTEROLOGIA</voce>
     </discipline_db>
   </disciplina>
 
@@ -56,15 +150,60 @@
   </disciplina>
 
   <disciplina>
-    <nome_atto>Ginecologia e ostetricia</nome_atto>
-    <dotazione>39</dotazione>
+    <nome_atto>Igiene degli Alimenti e della Nutrizione</nome_atto>
+    <dotazione>9</dotazione>
     <discipline_db>
-      <voce>GINECOLOGIA E OSTETRICIA</voce>
+      <voce>IGIENE DEGLI ALIMENTI E DELLA NUTRIZIONE</voce>
     </discipline_db>
   </disciplina>
 
   <disciplina>
-    <nome_atto>Medicina e Chir. d'urgenza</nome_atto>
+    <nome_atto>Igiene e Sanità Pubblica</nome_atto>
+    <dotazione>35</dotazione>
+    <discipline_db>
+      <voce>IGIENE E MEDICINA PREVENTIVA</voce>
+      <voce>IGIENE E SANITA' PUBBLICA</voce>
+      <voce>IGIENE EPIDEMIOLOGIA E SANITA' PUBBLICA</voce>
+      <voce>IGIENE PUBBLICA</voce>
+      <voce>EPIDEMIOLOGIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Igiene Ospedaliera</nome_atto>
+    <dotazione>7</dotazione>
+    <discipline_db>
+      <voce>IGIENE OSPEDALIERA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Malattie Infettive</nome_atto>
+    <dotazione>5</dotazione>
+    <discipline_db>
+      <voce>MALATTIE INFETTIVE</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Medicina del Lavoro</nome_atto>
+    <dotazione>9</dotazione>
+    <discipline_db>
+      <voce>MEDICINA LAV. SICUREZZA AMBIENTI LAVORO</voce>
+      <voce>MEDICINA DEL LAVORO</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Medicina dello Sport</nome_atto>
+    <dotazione>5</dotazione>
+    <discipline_db>
+      <voce>MEDICINA DELLO SPORT</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Medicina e Chirurgia d'Urgenza</nome_atto>
     <dotazione>51</dotazione>
     <discipline_db>
       <voce>MEDICINA E CHIR.D'ACCETTAZIONE E URGENZA</voce>
@@ -81,10 +220,26 @@
   </disciplina>
 
   <disciplina>
-    <nome_atto>Medicina del lavoro</nome_atto>
+    <nome_atto>Medicina Legale</nome_atto>
     <dotazione>9</dotazione>
     <discipline_db>
-      <voce>MEDICINA LAV. SICUREZZA AMBIENTI LAVORO</voce>
+      <voce>MEDICINA LEGALE</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Medicina Nucleare</nome_atto>
+    <dotazione>6</dotazione>
+    <discipline_db>
+      <voce>MEDICINA NUCLEARE</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Medicina Trasfusionale</nome_atto>
+    <dotazione>14</dotazione>
+    <discipline_db>
+      <voce>MEDICINA TRASFUSIONALE</voce>
     </discipline_db>
   </disciplina>
 
@@ -106,7 +261,24 @@
   </disciplina>
 
   <disciplina>
-    <nome_atto>Neuropsichiatria infantile</nome_atto>
+    <nome_atto>Neurochirurgia</nome_atto>
+    <dotazione>5</dotazione>
+    <discipline_db>
+      <voce>NEUROCHIRURGIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Neurologia</nome_atto>
+    <dotazione>15</dotazione>
+    <discipline_db>
+      <voce>NEUROLOGIA</voce>
+      <voce>NEUROFISIOPATOLOGIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Neuropsichiatria Infantile</nome_atto>
     <dotazione>8</dotazione>
     <discipline_db>
       <voce>NEUROPSICHIATRIA INFANTILE</voce>
@@ -114,21 +286,113 @@
   </disciplina>
 
   <disciplina>
-    <nome_atto>Laboratorio analisi e Trasfusionale</nome_atto>
-    <dotazione>31</dotazione>
+    <nome_atto>Oculistica</nome_atto>
+    <dotazione>15</dotazione>
     <discipline_db>
-      <voce>LABORATORIO ANALISI</voce>
-      <voce>PATOLOGIA CLINICA(LAB.AN.CHIM.CL.MICR.)</voce>
-      <voce>MEDICINA TRASFUSIONALE</voce>
+      <voce>OCULISTICA</voce>
+      <voce>OFTALMOLOGIA</voce>
     </discipline_db>
   </disciplina>
 
   <disciplina>
-    <nome_atto>Radiodiagnostica</nome_atto>
+    <nome_atto>Oncologia</nome_atto>
+    <dotazione>19</dotazione>
+    <discipline_db>
+      <voce>ONCOLOGIA MEDICA</voce>
+      <voce>ONCOLOGIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Organizzazione Sanitaria di Base</nome_atto>
+    <dotazione>18</dotazione>
+    <discipline_db>
+      <voce>ORGANIZZAZIONE DEI SERVIZI SANITARI DI BASE</voce>
+      <voce>ORGANIZZAZIONE SERVIZI SANITARI DI BASE</voce>
+      <voce>ORGANIZZAZ. DEI SERV. SANITARI DI BASE</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Ortopedia</nome_atto>
+    <dotazione>33</dotazione>
+    <discipline_db>
+      <voce>ORTOPEDIA E TRAUMATOLOGIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Ostetricia e Ginecologia</nome_atto>
+    <dotazione>39</dotazione>
+    <discipline_db>
+      <voce>GINECOLOGIA E OSTETRICIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Otorinolaringoiatria</nome_atto>
+    <dotazione>14</dotazione>
+    <discipline_db>
+      <voce>OTORINOLARINGOIATRIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Patologia Clinica</nome_atto>
+    <dotazione>18</dotazione>
+    <discipline_db>
+      <voce>PATOLOGIA CLINICA(LAB.AN.CHIM.CL.MICR.)</voce>
+      <voce>LABORATORIO ANALISI</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Pediatria</nome_atto>
+    <dotazione>31</dotazione>
+    <discipline_db>
+      <voce>PEDIATRIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Pneumologia</nome_atto>
+    <dotazione>4</dotazione>
+    <discipline_db>
+      <voce>PNEUMOLOGIA</voce>
+      <voce>TISIOLOGIA E PNEUMOLOGIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Psichiatria</nome_atto>
+    <dotazione>33</dotazione>
+    <discipline_db>
+      <voce>PSICHIATRIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Radiologia</nome_atto>
     <dotazione>38</dotazione>
     <discipline_db>
       <voce>RADIODIAGNOSTICA</voce>
-      <voce>MEDICINA NUCLEARE</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Reumatologia</nome_atto>
+    <dotazione>2</dotazione>
+    <discipline_db>
+      <voce>REUMATOLOGIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <disciplina>
+    <nome_atto>Scienza dell'Alimentazione</nome_atto>
+    <dotazione>3</dotazione>
+    <discipline_db>
+      <voce>SCIENZA DELL'ALIMENTAZIONE E DIETETICA</voce>
+      <voce>SCIENZA DELL ALIMENTAZIONE E DIETETICA</voce>
     </discipline_db>
   </disciplina>
 
@@ -137,6 +401,26 @@
     <dotazione>18</dotazione>
     <discipline_db>
       <voce>UROLOGIA</voce>
+    </discipline_db>
+  </disciplina>
+
+  <!-- ============================================================
+       Veterinari – dotazione da atto aziendale (non inclusi nel
+       conteggio medici; profilo DB: DIRIGENTE VETERINARIO)
+       ============================================================ -->
+  <disciplina>
+    <nome_atto>Veterinari</nome_atto>
+    <dotazione>71</dotazione>
+    <discipline_db>
+      <voce>SANITA' ANIMALE</voce>
+      <voce>AREA DELLA SANITA' ANIMALE</voce>
+      <voce>AREA DEI VETERINARI</voce>
+      <voce>IGIENE DELLA PRODUZIONE, TRASFORMAZIONE, COMMERCIALIZZAZIONE DEGLI ALIMENTI DI ORIGINE ANIMALE</voce>
+      <voce>IGIENE DELLA PRODUZIONE, TRASF., COMM., CONSERV.E TRASP. DEGLI ALIMENTI DI ORIG.</voce>
+      <voce>AREA IG.PROD.TRASF.ALIMENTI ORIG.ANIMALE</voce>
+      <voce>IGIENE DEGLI ALLEVAMENTI E DELLE PRODUZIONI ZOOTECNICHE</voce>
+      <voce>IGIENE ALLEVAMENTI E PROD. ZOOTECNICHE</voce>
+      <voce>AREA IG.ALLEVAMENTI E PROD. ZOOTECNICHE</voce>
     </discipline_db>
   </disciplina>
 

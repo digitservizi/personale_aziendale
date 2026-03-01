@@ -13,7 +13,7 @@
     - profilo:  nome della categoria DM 77 (usato come etichetta nel report)
     - unita:    numero di unità fabbisogno per OdC
     - profili_raggruppati: elenco dei PROFILO_RAGGRUPPATO del DB che
-      ricadono in questa categoria (quelli generati da mapping_qualifiche.xml).
+      ricadono in questa categoria (quelli generati da profili_atto_aziendale.xml).
       Se assente, il match avviene per nome esatto (profilo == PROFILO_RAGGRUPPATO).
 -->
 <FabbisognoOdC fonte="DM 77/2022">
@@ -22,33 +22,40 @@
     <profilo>PROFESSIONI SANITARIE INFERMIERISTICHE</profilo>
     <unita>7</unita>
     <profili_raggruppati>
-      <voce>INFERMIERE</voce>
-      <voce>INFERMIERE GENERICO ESPERTO</voce>
+      <!-- PROFILO_RAGGRUPPATO da profili_atto_aziendale.xml -->
+      <voce>INFERMIERI</voce>
     </profili_raggruppati>
   </figura>
 
   <figura>
     <profilo>OPERATORE SOCIO SANITARIO</profilo>
     <unita>4</unita>
-    <!-- nessun profili_raggruppati: match esatto su OPERATORE SOCIO SANITARIO -->
+    <profili_raggruppati>
+      <!-- PROFILO_RAGGRUPPATO da profili_atto_aziendale.xml -->
+      <voce>OSS</voce>
+    </profili_raggruppati>
   </figura>
 
   <figura>
     <profilo>PROFESSIONI SANITARIE DELLA RIABILITAZIONE</profilo>
     <unita>1</unita>
     <profili_raggruppati>
-      <voce>FISIOTERAPISTA</voce>
-      <voce>LOGOPEDISTA</voce>
-      <voce>TERAPISTA OCCUPAZIONALE</voce>
+      <!-- PROFILO_RAGGRUPPATO da profili_atto_aziendale.xml -->
+      <voce>FISIOTERAPISTI</voce>
+      <voce>LOGOPEDISTI</voce>
+      <voce>TERAPISTI OCCUPAZIONALI</voce>
       <voce>TECNICO DELLA RIABILITAZIONE PSICHIATRICA</voce>
-      <voce>TERAPISTA DELLA NEURO E PSICOMOTRICITA</voce>
+      <voce>NEUROPSICOMOTRICISTI</voce>
     </profili_raggruppati>
   </figura>
 
   <figura>
     <profilo>DIRIGENTE MEDICO</profilo>
     <unita>1</unita>
-    <!-- nessun profili_raggruppati: match esatto su DIRIGENTE MEDICO -->
+    <profili_raggruppati>
+      <!-- PROFILO_RAGGRUPPATO da profili_atto_aziendale.xml -->
+      <voce>DIRIGENTE MEDICO</voce>
+    </profili_raggruppati>
   </figura>
 
 </FabbisognoOdC>

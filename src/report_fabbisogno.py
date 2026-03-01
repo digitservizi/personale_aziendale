@@ -306,10 +306,19 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
     }
     personale_df = personale_df.fillna(_FILL_NA)
 
-    # Conteggio T.D. (tutti i contratti non-TI) prima di filtrare
-    personale_df['_IS_TD'] = (
-        personale_df['DESC_NATURA'].str.upper() != 'TEMPO INDETERMINATO'
-    ).astype(int)
+    # Classificazione TI / TD (coerente con report atto aziendale)
+    # TD = contratti esplicitamente temporanei; TI = tutto il resto
+    _nat_u = personale_df['DESC_NATURA'].str.upper()
+    _mask_td_riep = (
+        _nat_u.isin([
+            'TEMPO DETERMINATO',
+            'TEMPO DETERMINATO ART. 15 SEPTIES DLGS 502/92',
+        ])
+        | _nat_u.str.contains('15_OCTIES', na=False)
+        | _nat_u.isin(['UNIVERSITARI H19', 'T.D. SPECIALIZZANDI'])
+    )
+    _mask_ti_riep = ~_mask_td_riep
+    personale_df['_IS_TD'] = _mask_td_riep.astype(int)
     td_counts = personale_df[personale_df['_IS_TD'] == 1].groupby(
         ['DESC_SEDE_FISICA', 'DESC_SC_SSD_SS', 'DESC_TIPO_CDC',
          'PROFILO_RAGGRUPPATO']
@@ -319,9 +328,7 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
     personale_all_df = personale_df.copy()
     personale_all_df.drop(columns=['_IS_TD'], inplace=True)
 
-    personale_df = personale_df[
-        personale_df['DESC_NATURA'].str.upper() == "TEMPO INDETERMINATO"
-    ].copy()
+    personale_df = personale_df[_mask_ti_riep].copy()
     personale_df.drop(columns=['_IS_TD'], inplace=True)
 
     # Colonna assunti nell'anno

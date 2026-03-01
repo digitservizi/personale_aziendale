@@ -67,22 +67,6 @@ def carica_mapping_reparti(xml_path):
     return mapping
 
 
-def carica_intensita_reparti_xml(xml_path):
-    """
-    Carica dal XML la tabella intensità reparto dal dump DB reparti.
-    Restituisce dict {nome_db_upper: intensita}.
-    """
-    tree = ET.parse(xml_path)
-    root = tree.getroot()
-    mapping = {}
-    for rep in root.find('Reparti').findall('reparto'):
-        nome_db = rep.findtext('nome_db', '').strip().upper()
-        intensita = rep.findtext('intensita', '').strip()
-        if intensita:
-            mapping[nome_db] = intensita
-    return mapping
-
-
 def carica_intensita_per_pattern(xml_path):
     """
     Carica la tabella pattern → intensità da XML.
@@ -201,6 +185,36 @@ def carica_medici_atto_aziendale(xml_path):
             'discipline_db': voci_db,
         })
     return discipline
+
+
+def carica_profili_atto_aziendale(xml_path):
+    """
+    Carica il mapper profili professionali da atto aziendale.
+
+    Restituisce lista di dict, ciascuno con:
+      - nome_atto:      nome profilo (= valore PROFILO_RAGGRUPPATO)
+      - dotazione:      dotazione organica da atto aziendale
+      - qualifiche_db:  lista di prefissi DESC_QUALI (UPPER) per il match
+    """
+    tree = ET.parse(xml_path)
+    root = tree.getroot()
+    profili = []
+    for prof in root.findall('profilo'):
+        nome_atto = prof.findtext('nome_atto', '').strip()
+        dotazione = int(prof.findtext('dotazione', '0'))
+        prefissi = []
+        sezione = prof.find('qualifiche_db')
+        if sezione is not None:
+            for pref in sezione.findall('prefisso'):
+                v = pref.text.strip().upper() if pref.text else ''
+                if v:
+                    prefissi.append(v)
+        profili.append({
+            'nome_atto': nome_atto,
+            'dotazione': dotazione,
+            'qualifiche_db': prefissi,
+        })
+    return profili
 
 
 # ============================================================

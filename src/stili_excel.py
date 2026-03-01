@@ -28,8 +28,12 @@ FILL_HEADER = PatternFill(start_color='4472C4', end_color='4472C4',
 FILL_AGENAS = PatternFill(start_color='C6EFCE', end_color='C6EFCE',
                           fill_type='solid')     # verde chiaro (rif. AGENAS)
 
+FILL_TOTALE = PatternFill(start_color='D9E2F3', end_color='D9E2F3',
+                          fill_type='solid')     # azzurro medio (riga totale)
+
 FONT_HEADER = Font(bold=True, color='FFFFFF', size=11)
 FONT_TITLE  = Font(bold=True, size=13)
+FONT_TOTALE = Font(bold=True, size=11)
 ALIGN_CENTER = Alignment(horizontal='center', vertical='center')
 
 
@@ -62,6 +66,15 @@ def scrivi_riga_dati(ws, riga_idx, valori, fill):
     for col_idx, val in enumerate(valori, 1):
         c = ws.cell(row=riga_idx, column=col_idx, value=val)
         c.fill = fill
+        c.border = THIN_BORDER
+
+
+def scrivi_riga_totale(ws, riga_idx, valori):
+    """Scrive una riga TOTALE in grassetto con sfondo dedicato."""
+    for col_idx, val in enumerate(valori, 1):
+        c = ws.cell(row=riga_idx, column=col_idx, value=val)
+        c.fill = FILL_TOTALE
+        c.font = FONT_TOTALE
         c.border = THIN_BORDER
 
 

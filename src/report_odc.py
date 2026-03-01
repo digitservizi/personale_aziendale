@@ -91,6 +91,13 @@ def genera_report_odc(personale_file, pensionamenti_file, lista_odc,
             indicatori_odc_file
         )
 
+    # Mapping inverso: categoria DM77 → set di PROFILO_RAGGRUPPATO (upper)
+    # Usato per determinare a quale categoria DM77 appartiene un profilo
+    # senza sovrascrivere PROFILO_RAGGRUPPATO (che resta da profili_atto_aziendale.xml)
+    cat_dm77_per_profilo = {}   # PROFILO_UPPER → CATEGORIA_DM77_UPPER
+    for prof_upper, cat_upper in mappa_profili_dm77.items():
+        cat_dm77_per_profilo[prof_upper] = cat_upper
+
     righe_report = []
 
     for odc in lista_odc:
@@ -116,16 +123,9 @@ def genera_report_odc(personale_file, pensionamenti_file, lista_odc,
             if len(personale_struttura) == 0 and posti_letto_ord == 0:
                 continue
 
-            # Rimappa i profili alle categorie DM 77 per tutte le strutture
-            # (unifica le etichette: FISIOTERAPISTA → PROF SAN RIAB, ecc.)
-            if mappa_profili_dm77:
-                personale_struttura = personale_struttura.copy()
-                personale_struttura['PROFILO_RAGGRUPPATO'] = (
-                    personale_struttura['PROFILO_RAGGRUPPATO']
-                    .apply(lambda p: mappa_profili_dm77.get(
-                        p.strip().upper(), p
-                    ))
-                )
+            # NON sovrascrivere PROFILO_RAGGRUPPATO: restano i nomi
+            # dall'unico punto di verità (profili_atto_aziendale.xml).
+            # Il mapping DM77 è usato solo per il confronto fabbisogno.
 
             profili = personale_struttura.groupby(
                 'PROFILO_RAGGRUPPATO'
@@ -140,6 +140,7 @@ def genera_report_odc(personale_file, pensionamenti_file, lista_odc,
                     'POSTI_LETTO': posti_letto_ord,
                     'TIPO': 'DM 77' if is_udi else 'Struttura',
                     'PROFILO': '-',
+                    'CATEGORIA_DM77': '-',
                     'IN_SERVIZIO': 0,
                     'FABBISOGNO_DM77': '-',
                     'DELTA': '-',
@@ -155,19 +156,45 @@ def genera_report_odc(personale_file, pensionamenti_file, lista_odc,
                 )
                 continue
 
+            # Per le strutture U.D.I. calcolo fabbisogno per categoria DM77
+            # aggregando i profili che vi ricadono
             totale_struttura = 0
             totale_fabb = 0
+            categorie_presenti = {}  # cat_upper → totale in servizio
+            fabb_gia_contati = set()
+
+            if is_udi and fabbisogno_dm77:
+                # Raggruppa i profili presenti per categoria DM77
+                for _, pr in profili.iterrows():
+                    cat = cat_dm77_per_profilo.get(
+                        pr['PROFILO_RAGGRUPPATO'].strip().upper()
+                    )
+                    if cat:
+                        categorie_presenti[cat] = (
+                            categorie_presenti.get(cat, 0)
+                            + pr['IN_SERVIZIO']
+                        )
+
             for _, pr in profili.iterrows():
                 profilo = pr['PROFILO_RAGGRUPPATO']
                 in_servizio = pr['IN_SERVIZIO']
                 totale_struttura += in_servizio
 
-                if is_udi and fabbisogno_dm77:
-                    fabb = fabbisogno_dm77.get(profilo.strip().upper(), 0)
-                    delta = in_servizio - fabb
+                cat_dm77 = cat_dm77_per_profilo.get(
+                    profilo.strip().upper()
+                )
+
+                if is_udi and fabbisogno_dm77 and cat_dm77:
+                    fabb = fabbisogno_dm77.get(cat_dm77, 0)
+                    tot_cat = categorie_presenti.get(cat_dm77, 0)
+                    delta = tot_cat - fabb
                     fabb_str = fabb
-                    totale_fabb += fabb
+                    # Somma fabbisogno solo una volta per categoria
+                    if cat_dm77 not in fabb_gia_contati:
+                        totale_fabb += fabb
+                        fabb_gia_contati.add(cat_dm77)
                 else:
+                    cat_dm77 = '-'
                     fabb_str = '-'
                     delta = '-'
 
@@ -189,6 +216,7 @@ def genera_report_odc(personale_file, pensionamenti_file, lista_odc,
                     'POSTI_LETTO': posti_letto_ord,
                     'TIPO': 'DM 77' if is_udi else 'Struttura',
                     'PROFILO': profilo,
+                    'CATEGORIA_DM77': cat_dm77 if cat_dm77 else '-',
                     'IN_SERVIZIO': in_servizio,
                     'FABBISOGNO_DM77': fabb_str,
                     'DELTA': delta,
@@ -202,23 +230,29 @@ def genera_report_odc(personale_file, pensionamenti_file, lista_odc,
                     riga[f'PROIEZIONE_{anno}'] = in_servizio - pens_cum
                 righe_report.append(riga)
 
-            # Profili DM 77 mancanti
+            # Categorie DM 77 completamente mancanti
             if is_udi and fabbisogno_dm77:
-                profili_presenti = set(
-                    profili['PROFILO_RAGGRUPPATO'].str.upper()
-                )
+                categorie_coperte = set()
+                for _, pr in profili.iterrows():
+                    cat = cat_dm77_per_profilo.get(
+                        pr['PROFILO_RAGGRUPPATO'].strip().upper()
+                    )
+                    if cat:
+                        categorie_coperte.add(cat)
+
                 for profilo_dm, fabb_dm in fabbisogno_dm77.items():
-                    if profilo_dm not in profili_presenti:
+                    if profilo_dm not in categorie_coperte:
                         riga = {
                             'ODC': nome_odc,
                             'STRUTTURA': nome_struttura,
                             'POSTI_LETTO': posti_letto_ord,
                             'TIPO': 'DM 77',
                             'PROFILO': f'[MANCANTE] {profilo_dm}',
+                            'CATEGORIA_DM77': profilo_dm,
                             'IN_SERVIZIO': 0,
                             'FABBISOGNO_DM77': fabb_dm,
                             'DELTA': -fabb_dm,
-                            'NOTE': 'Profilo previsto dal DM 77 ma assente',
+                            'NOTE': 'Categoria DM 77 assente',
                         }
                         for anno in anni_pensionamento:
                             riga[f'PENSIONAMENTI_{anno}'] = 0
@@ -248,6 +282,7 @@ def genera_report_odc(personale_file, pensionamenti_file, lista_odc,
         'POSTI_LETTO': 'Posti Letto',
         'TIPO': 'Tipo',
         'PROFILO': 'Profilo Professionale',
+        'CATEGORIA_DM77': 'Categoria DM 77',
         'IN_SERVIZIO': 'In Servizio',
         'FABBISOGNO_DM77': 'Fabbisogno DM 77',
         'DELTA': 'Delta',
@@ -260,9 +295,13 @@ def genera_report_odc(personale_file, pensionamenti_file, lista_odc,
 
     wb = Workbook()
     wb.remove(wb.active)
-    colonne_dati = [c for c in report_df.columns if c != 'ODC']
+    colonne_dati = [c for c in report_df.columns
+                    if c not in ('ODC', 'Categoria DM 77')]
 
     # ====== FOGLIO RIEPILOGO ======
+    # Aggrega per sede + profilo professionale (nomi da profili_atto_aziendale.xml)
+    # Il fabbisogno DM77 è mostrato per ciascun profilo che rientra in una
+    # categoria DM77; il delta è a livello di categoria (aggregato).
     ws_riep = wb.create_sheet(title='RIEPILOGO')
     col_pens_odc = [f'Pensionamenti {a}' for a in anni_pensionamento]
     col_riep = (
@@ -285,25 +324,36 @@ def genera_report_odc(personale_file, pensionamenti_file, lista_odc,
             prev_odc_riep = nome_odc
         fill_riep = FILL_A if fill_idx_riep % 2 == 0 else FILL_B
 
+        # Solo le strutture U.D.I. hanno fabbisogno DM77;
+        # le altre strutture non hanno Categoria DM 77
         for profilo, df_prof in df_odc_riep.groupby(
             'Profilo Professionale', sort=True
         ):
-            in_serv = df_prof['In Servizio'].sum()
-            fabb_vals = pd.to_numeric(
-                df_prof['Fabbisogno DM 77'], errors='coerce'
-            )
-            fabb = (
-                int(fabb_vals.sum()) if fabb_vals.notna().any() else '-'
-            )
-            delta_vals = pd.to_numeric(df_prof['Delta'], errors='coerce')
-            delta = (
-                int(delta_vals.sum()) if delta_vals.notna().any() else '-'
-            )
+            in_serv = int(df_prof['In Servizio'].sum())
+
+            # Determina la categoria DM77 del profilo (se esiste)
+            cat_vals = df_prof['Categoria DM 77'].dropna().unique()
+            cat_vals = [c for c in cat_vals if c != '-']
+            cat_dm77 = cat_vals[0] if cat_vals else None
+
+            if cat_dm77:
+                # Fabbisogno della categoria DM77
+                fabb = fabbisogno_dm77.get(cat_dm77, 0)
+                # Totale in servizio dell'intera categoria nella sede
+                mask_cat = df_odc_riep['Categoria DM 77'] == cat_dm77
+                tot_cat_serv = int(df_odc_riep.loc[
+                    mask_cat, 'In Servizio'
+                ].sum())
+                delta = tot_cat_serv - fabb
+            else:
+                fabb = '-'
+                delta = '-'
+
             pens_vals = [int(df_prof[cp].sum()) for cp in col_pens_odc]
-            proiezione = int(in_serv) - sum(pens_vals)
+            proiezione = in_serv - sum(pens_vals)
 
             valori = (
-                [nome_odc, profilo, int(in_serv), fabb, delta]
+                [nome_odc, profilo, in_serv, fabb, delta]
                 + pens_vals + [proiezione]
             )
             scrivi_riga_dati(ws_riep, riep_row, valori, fill_riep)
@@ -313,12 +363,12 @@ def genera_report_odc(personale_file, pensionamenti_file, lista_odc,
 
     # ====== FOGLI DETTAGLIO ======
     for nome_odc, df_sede in report_df.groupby('ODC', sort=False):
-        df_sede = df_sede.drop(columns=['ODC'])
+        df_sede = df_sede.drop(columns=['ODC', 'Categoria DM 77'])
         sheet_name = str(nome_odc)[:31]
         ws = wb.create_sheet(title=sheet_name)
         _scrivi_foglio_odc(
             ws, f'Ospedali di Comunità - {nome_odc}',
-            colonne_dati, df_sede,
+            list(df_sede.columns), df_sede,
         )
 
     wb.save(output_file)

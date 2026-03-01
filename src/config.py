@@ -30,7 +30,7 @@ FILE_MAPPING_ODC = [
 ]
 FILE_INDICATORI_ODC = 'configurazione/indicatori_ospedali_comunita_dm_77.xml'
 FILE_MEDICI_ATTO_AZIENDALE = 'configurazione/medici_atto_aziendale.xml'
-FILE_MAPPING_QUALIFICHE = 'configurazione/mapping_qualifiche.xml'
+FILE_PROFILI_ATTO_AZIENDALE = 'configurazione/profili_atto_aziendale.xml'
 FILE_INDICATORI_AGENAS_MATERNO_INFANTILE = 'configurazione/indicatori_agenas_materno_infantile.xml'
 FILE_INDICATORI_AGENAS_RADIOLOGIA = 'configurazione/indicatori_agenas_radiologia.xml'
 FILE_INDICATORI_AGENAS_TRASFUSIONALE = 'configurazione/indicatori_agenas_trasfusionale.xml'
@@ -119,5 +119,6 @@ DIR_ELABORATI = 'elaborati'
 
 FILE_OUTPUT = f'{DIR_ELABORATI}/analisi_personale_{ANNO_ANALISI}.xlsx'
 FILE_OUTPUT_ATTO_AZIENDALE = f'{DIR_ELABORATI}/analisi_medici_atto_aziendale_{ANNO_ANALISI}.xlsx'
+FILE_OUTPUT_PROFILI_ATTO_AZIENDALE = f'{DIR_ELABORATI}/analisi_profili_atto_aziendale_{ANNO_ANALISI}.xlsx'
 FILE_OUTPUT_ODC = f'{DIR_ELABORATI}/odc_dm77_{ANNO_ANALISI}.xlsx'
 FILE_DEBUG = f'{DIR_ELABORATI}/controprova_calcoli_{ANNO_ANALISI}.xlsx'

@@ -1,0 +1,386 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  MAPPER PROFILI PROFESSIONALI – ATTO AZIENDALE ASREM
+  Fonte: tabella "Profili professionali" – Dotazione organica complessiva 4448
+
+  UNICO PUNTO DI VERITÀ per:
+    1) Dotazione organica da atto aziendale (confronto fabbisogno)
+    2) Mapping DESC_QUALI → PROFILO_RAGGRUPPATO (sostituisce mapping_qualifiche.xml)
+
+  Ogni <profilo> ha:
+    - <nome_atto>:          Nome come da atto aziendale = valore PROFILO_RAGGRUPPATO
+    - <dotazione>:          Dotazione organica prevista dall'atto aziendale
+    - <qualifiche_db>:      Uno o più <prefisso> con i prefissi grezzi di DESC_QUALI
+                            usati per il match (startswith, case-insensitive)
+
+  Logica di mapping nel codice:
+    per ogni riga del DB,  DESC_QUALI.upper().startswith(prefisso) → PROFILO_RAGGRUPPATO = nome_atto
+-->
+<ProfiliAttoAziendale>
+
+  <!-- ============================================================
+       Dotazione totale aziendale: 4448
+       ============================================================ -->
+
+  <!-- ======== DIRIGENZA MEDICA (828) ======== -->
+  <profilo>
+    <nome_atto>Dirigente Medico</nome_atto>
+    <dotazione>828</dotazione>
+    <qualifiche_db>
+      <prefisso>DIR. MED</prefisso>
+      <prefisso>DIR.MED</prefisso>
+      <prefisso>DIRG. MED</prefisso>
+      <prefisso>DIRIG. MED</prefisso>
+      <prefisso>DIRIG. I LIV</prefisso>
+      <prefisso>DIRIGENTE MEDICO</prefisso>
+      <prefisso>DOCENTE UNIVERSITARIO MEDICO</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <!-- ======== DIRIGENZA VETERINARIA (71) ======== -->
+  <profilo>
+    <nome_atto>Dirigente Veterinario</nome_atto>
+    <dotazione>71</dotazione>
+    <qualifiche_db>
+      <prefisso>DIR. VETER</prefisso>
+      <prefisso>DIR.VETER</prefisso>
+      <prefisso>DIRIG. VETER</prefisso>
+      <prefisso>VETERINARIO</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <!-- ======== ALTRA DIRIGENZA ======== -->
+  <profilo>
+    <nome_atto>Dirigente Amministrativo</nome_atto>
+    <dotazione>18</dotazione>
+    <qualifiche_db>
+      <prefisso>DIR.AMM</prefisso>
+      <prefisso>DIRIGENTE AMMINISTRATIVO</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Dirigente Informatico</nome_atto>
+    <dotazione>1</dotazione>
+    <qualifiche_db>
+      <prefisso>DIRIGENTE ANALISTA</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Biologi</nome_atto>
+    <dotazione>36</dotazione>
+    <qualifiche_db>
+      <prefisso>DIR.SAN.BIOLOGO</prefisso>
+      <prefisso>DIRIG. BIOLOGO</prefisso>
+      <prefisso>DOCENTE UNIVERSITARIO BIOLOGO</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Farmacisti</nome_atto>
+    <dotazione>14</dotazione>
+    <qualifiche_db>
+      <prefisso>DIR.SAN.FARM</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Psicologi</nome_atto>
+    <dotazione>43</dotazione>
+    <qualifiche_db>
+      <prefisso>DIR.SAN.PSIC</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Odontoiatri</nome_atto>
+    <dotazione>4</dotazione>
+    <qualifiche_db>
+      <prefisso>DIR.ODONT</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Sociologi</nome_atto>
+    <dotazione>11</dotazione>
+    <qualifiche_db>
+      <prefisso>DIR.TECN. SOCIOLOGO</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Ingegneri</nome_atto>
+    <dotazione>2</dotazione>
+    <qualifiche_db>
+      <prefisso>DIRIGENTE INGEGNERE</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Chimico</nome_atto>
+    <dotazione>1</dotazione>
+    <qualifiche_db>
+      <prefisso>CHIMICO</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Fisici</nome_atto>
+    <dotazione>1</dotazione>
+    <qualifiche_db>
+      <prefisso>FISICO</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Dirigenti delle Professioni Sanitarie</nome_atto>
+    <dotazione>5</dotazione>
+    <qualifiche_db>
+      <prefisso>DIRIGENTE DELLE PROFESSIONI SANITARIE</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <!-- ======== COMPARTO – AREA SANITARIA ======== -->
+  <profilo>
+    <nome_atto>Infermieri</nome_atto>
+    <dotazione>1766</dotazione>
+    <qualifiche_db>
+      <prefisso>INFERMIERE</prefisso>
+      <prefisso>PUERICULTRICE</prefisso>
+      <prefisso>COLL. PROF. SAN. VIG. INFANZIA</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>OSS</nome_atto>
+    <dotazione>473</dotazione>
+    <qualifiche_db>
+      <prefisso>OPERATORE SOCIO SANITARIO</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Ostetriche</nome_atto>
+    <dotazione>69</dotazione>
+    <qualifiche_db>
+      <prefisso>OSTETRICA</prefisso>
+      <prefisso>OSTETRICO</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Fisioterapisti</nome_atto>
+    <dotazione>83</dotazione>
+    <qualifiche_db>
+      <prefisso>FISIOTERAPISTA</prefisso>
+      <prefisso>MASSAGGIATORE NON VEDENTE</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Tecnici di Laboratorio</nome_atto>
+    <dotazione>111</dotazione>
+    <qualifiche_db>
+      <prefisso>TS LABORATORIO BIOMEDICO</prefisso>
+      <prefisso>TECN. DI CITOLOGIA</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Tecnici di Radiologia</nome_atto>
+    <dotazione>100</dotazione>
+    <qualifiche_db>
+      <prefisso>TS RADIOLOGIA MEDICA</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Tecnici della Prevenzione</nome_atto>
+    <dotazione>44</dotazione>
+    <qualifiche_db>
+      <prefisso>TEC.PREV</prefisso>
+      <prefisso>TEC.PREVENZIONE</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Tecnici di Neurofisiopatologia</nome_atto>
+    <dotazione>10</dotazione>
+    <qualifiche_db>
+      <prefisso>TECNICO DI NEUROFISIOPATOLOGIA</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Tecnici Perfusionisti</nome_atto>
+    <dotazione>7</dotazione>
+    <qualifiche_db>
+      <prefisso>TEC. FISIOPAT. CARD. PERF.</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Tecnico della Riabilitazione Psichiatrica</nome_atto>
+    <dotazione>6</dotazione>
+    <qualifiche_db>
+      <prefisso>TECNICO DELLA RIAB</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Logopedisti</nome_atto>
+    <dotazione>13</dotazione>
+    <qualifiche_db>
+      <prefisso>LOGOPEDISTA</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Dietisti</nome_atto>
+    <dotazione>8</dotazione>
+    <qualifiche_db>
+      <prefisso>DIETISTA</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Audiometristi</nome_atto>
+    <dotazione>6</dotazione>
+    <qualifiche_db>
+      <prefisso>TS AUDIOMETRISTA</prefisso>
+      <prefisso>AUDIOMETRISTA</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Ortottista</nome_atto>
+    <dotazione>7</dotazione>
+    <qualifiche_db>
+      <prefisso>ORTOTTISTA</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Igienisti Dentali</nome_atto>
+    <dotazione>4</dotazione>
+    <qualifiche_db>
+      <prefisso>IGIENISTA DENTALE</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Neuropsicomotricisti</nome_atto>
+    <dotazione>6</dotazione>
+    <qualifiche_db>
+      <prefisso>TECNICO NEURO-PSICOMOTRICISTA</prefisso>
+      <prefisso>TERAPISTA DELLA NEURO</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Terapisti Occupazionali</nome_atto>
+    <dotazione>21</dotazione>
+    <qualifiche_db>
+      <prefisso>TERAPISTA OCCUPAZIONALE</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Assistenti Sociali</nome_atto>
+    <dotazione>71</dotazione>
+    <qualifiche_db>
+      <prefisso>ASSISTENTE SOCIALE</prefisso>
+      <prefisso>COLL.PROF.ESPERTO ASS. SOCIALE</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Ingegnere Clinico</nome_atto>
+    <dotazione>1</dotazione>
+    <qualifiche_db>
+      <prefisso>INGEGNERE CLINICO</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <!-- ======== COMPARTO – AREA TECNICA ======== -->
+  <profilo>
+    <nome_atto>Operatore Tecnico</nome_atto>
+    <dotazione>181</dotazione><!-- 105 + 1 autista + 66 spec. + 4 spec.esp. + 5 spec.esp.autista -->
+    <qualifiche_db>
+      <prefisso>OPERATORE TECNICO</prefisso>
+      <prefisso>OP. TECNICO</prefisso>
+      <prefisso>OPER.TECN</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Ausiliario Specializzato</nome_atto>
+    <dotazione>123</dotazione>
+    <qualifiche_db>
+      <prefisso>AUS.SPEC</prefisso>
+      <prefisso>AUSILIARIO SPECIALIZZATO</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Commesso</nome_atto>
+    <dotazione>2</dotazione>
+    <qualifiche_db>
+      <prefisso>COMMESSO</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <!-- ======== COMPARTO – AREA AMMINISTRATIVA ======== -->
+  <profilo>
+    <nome_atto>Collaboratore Amministrativo Prof</nome_atto>
+    <dotazione>96</dotazione><!-- 62 base + 34 esperto -->
+    <qualifiche_db>
+      <prefisso>COLLABORATORE AMM</prefisso>
+      <prefisso>COLLABORATORE AMMINISTRATIVO</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Collaboratore Tecnico Professionale</nome_atto>
+    <dotazione>14</dotazione><!-- 12 base + 2 esperto -->
+    <qualifiche_db>
+      <prefisso>COLLABORATORE TECNICO</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Assistente Amministrativo</nome_atto>
+    <dotazione>90</dotazione>
+    <qualifiche_db>
+      <prefisso>ASSISTENTE AMMINISTRATIVO</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Assistente Tecnico</nome_atto>
+    <dotazione>53</dotazione>
+    <qualifiche_db>
+      <prefisso>ASSISTENTE TECNICO</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Coadiutore Amministrativo</nome_atto>
+    <dotazione>46</dotazione><!-- 30 base + 16 esperto -->
+    <qualifiche_db>
+      <prefisso>COADIUTORE AMMINISTRATIVO</prefisso>
+    </qualifiche_db>
+  </profilo>
+
+  <profilo>
+    <nome_atto>Avvocati</nome_atto>
+    <dotazione>2</dotazione>
+    <qualifiche_db />
+    <!-- Gli avvocati hanno DESC_QUALI=COLLABORATORE AMM ma DESC_DISCIPLINE=Avvocato -->
+    <discipline_db>
+      <disciplina>Avvocato</disciplina>
+    </discipline_db>
+  </profilo>
+
+</ProfiliAttoAziendale>
