@@ -56,9 +56,9 @@ FILE_INDICATORI_TRASFUSIONALE_SPECIALE = 'configurazione/indicatori/indicatori_t
 # ============================================================
 # Numero di parti annui per presidio ospedaliero (ultimo anno disponibile)
 PARTI_PER_PRESIDIO = {
-    'CAMPOBASSO - P.O. CARDARELLI':  509,
-    'ISERNIA - P.O. VENEZIALE':      214,
-    'TERMOLI - P.O. SAN TIMOTEO':    306,
+    'CAMPOBASSO - P.O. CARDARELLI':  617,
+    'ISERNIA - P.O. VENEZIALE':      260,
+    'TERMOLI - P.O. SAN TIMOTEO':    368,
 }
 
 # Numero di sale operatorie attive per presidio ospedaliero (§ 8.1.2 AGENAS)

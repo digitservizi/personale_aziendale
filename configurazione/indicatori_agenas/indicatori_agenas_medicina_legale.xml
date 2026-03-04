@@ -32,4 +32,13 @@
            profilo_agenas="OPERATORE_SOCIO_SANITARIO"/>
   </mapping_profili>
 
+  <!-- ──────────────────────────────────────────────────────────
+       Discipline DB che afferiscono a quest'area.
+       ────────────────────────────────────────────────────────── -->
+  <discipline_db>
+    <disciplina pattern="MEDICINA LEGALE"
+                profilo_agenas="DIRIGENTE_MEDICO" />
+    <uo_in_area pattern="MEDICINA LEGALE" />
+  </discipline_db>
+
 </indicatori_agenas_medicina_legale>

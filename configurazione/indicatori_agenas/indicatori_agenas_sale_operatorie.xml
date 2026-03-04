@@ -66,4 +66,13 @@
          profilo_agenas="OPERATORE_SOCIO_SANITARIO" />
   </mapping_profili>
 
+  <!-- ──────────────────────────────────────────────────────────
+       Discipline DB che afferiscono a quest'area.
+       ────────────────────────────────────────────────────────── -->
+  <discipline_db>
+    <disciplina pattern="ANESTESIA E RIANIMAZIONE|ANESTESIA"
+                profilo_agenas="DIRIGENTE_MEDICO_ANESTESISTA" />
+    <uo_in_area pattern="ANESTESIA|RIANIMAZIONE|SALA OPERAT|BLOCCO OPERAT" />
+  </discipline_db>
+
 </IndicatoriAgenasSaleOperatorie>

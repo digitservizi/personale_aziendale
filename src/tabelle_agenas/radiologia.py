@@ -187,6 +187,16 @@ def _scrivi_tabella_agenas_radiologia(
             ).font = Font(
                 italic=True, size=9, color='555555')
 
+    row += 1
+    ws.merge_cells(start_row=row, start_column=1,
+                   end_row=row, end_column=N_COLS_MERGE)
+    ws.cell(row=row, column=1,
+            value="N.B. I Dir. Medici Radiologia comprendono i medici "
+                  "con disciplina Radiodiagnostica e Medicina Nucleare "
+                  "afferenti all'area dei servizi di Radiologia "
+                  "(Tab. 13 AGENAS)."
+            ).font = Font(italic=True, size=9, color='555555')
+
     if df_area is not None:
         row += 1
         ws.merge_cells(start_row=row, start_column=1,

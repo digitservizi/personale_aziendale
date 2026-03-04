@@ -255,7 +255,7 @@ def carica_indicatori_agenas_materno_infantile(xml_path):
         for unita in sez_uo.findall('unita'):
             mapping_uo.append({
                 'pattern': unita.attrib['pattern'],
-                'profilo_agenas': unita.attrib['profilo_agenas'],
+                'profilo_agenas': unita.attrib.get('profilo_agenas'),
             })
 
     mapping_profili = []
@@ -267,10 +267,14 @@ def carica_indicatori_agenas_materno_infantile(xml_path):
                 'profilo_agenas': mappa.attrib['profilo_agenas'],
             })
 
+    # Discipline DB (opzionale) per conteggio "fuori area"
+    discipline_db = _carica_discipline_db(area)
+
     return {
         'fasce': fasce,
         'mapping_uo': mapping_uo,
         'mapping_profili': mapping_profili,
+        'discipline_db': discipline_db,
     }
 
 
@@ -451,11 +455,15 @@ def _carica_indicatori_agenas_per_livello(xml_path):
                 'profilo_agenas': mappa.attrib['profilo_agenas'],
             })
 
+    # Discipline DB (opzionale) per conteggio "fuori area"
+    discipline_db = _carica_discipline_db(root)
+
     return {
         'livelli': livelli,
         'mapping_uo': mapping_uo,
         'mapping_profili': mapping_profili,
         'esclusioni': _carica_esclusioni(root),
+        'discipline_db': discipline_db,
     }
 
 
@@ -467,6 +475,36 @@ def _carica_esclusioni(root):
         for el in sez.findall('escludi'):
             esclusioni.append(el.attrib['pattern'])
     return esclusioni
+
+
+def _carica_discipline_db(root):
+    """Carica il mapping discipline DB → profilo AGENAS (opzionale).
+
+    Usato per contare il personale "fuori area": dipendenti con
+    disciplina coerente all'area ma assegnati a UO diverse.
+
+    Restituisce lista di dict {pattern, profilo_agenas}
+    con in più la chiave opzionale 'uo_in_area' (pattern regex)
+    che indica le UO che fanno parte dell'area (escluse dal
+    conteggio fuori area).
+    """
+    discipline = []
+    uo_in_area_pattern = None
+    sez = root.find('discipline_db')
+    if sez is not None:
+        for el in sez.findall('disciplina'):
+            discipline.append({
+                'pattern': el.attrib['pattern'],
+                'profilo_agenas': el.attrib['profilo_agenas'],
+            })
+        uo_el = sez.find('uo_in_area')
+        if uo_el is not None:
+            uo_in_area_pattern = uo_el.attrib.get('pattern', '')
+    # Aggiungiamo il pattern uo_in_area a ciascun elemento
+    if uo_in_area_pattern:
+        for d in discipline:
+            d['uo_in_area'] = uo_in_area_pattern
+    return discipline
 
 
 # ============================================================
@@ -639,10 +677,14 @@ def carica_indicatori_agenas_terapia_intensiva(xml_path):
                 'profilo_agenas': m.get('profilo_agenas'),
             })
 
+    # Discipline DB (opzionale) per conteggio "fuori area"
+    discipline_db = _carica_discipline_db(root)
+
     return {
         'standard': standard,
         'mapping_uo': mapping_uo,
         'mapping_profili': mapping_profili,
+        'discipline_db': discipline_db,
     }
 
 
@@ -706,9 +748,13 @@ def carica_indicatori_agenas_sale_operatorie(xml_path):
                 'profilo_agenas': m.get('profilo_agenas'),
             })
 
+    # Discipline DB (opzionale) per conteggio "fuori area"
+    discipline_db = _carica_discipline_db(root)
+
     return {
         'standard': standard,
         'parametri': parametri,
         'mapping_uo': mapping_uo,
         'mapping_profili': mapping_profili,
+        'discipline_db': discipline_db,
     }

@@ -71,4 +71,13 @@
            profilo_agenas="OPERATORE_SOCIO_SANITARIO" />
   </mapping_profili>
 
+  <!-- ──────────────────────────────────────────────────────────
+       Discipline DB che afferiscono a quest'area.
+       ────────────────────────────────────────────────────────── -->
+  <discipline_db>
+    <disciplina pattern="PATOLOGIA CLINICA|BIOCHIMICA CLINICA|MICROBIOLOG"
+                profilo_agenas="DIRIGENTE_SANITARIO" />
+    <uo_in_area pattern="LABORATORIO|PATOLOGIA CLINICA|BIOCHIMICA|MICROBIOLOG" />
+  </discipline_db>
+
 </IndicatoriAgenasLaboratorio>

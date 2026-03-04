@@ -59,4 +59,15 @@
     <mappa pattern="\bOSS\b|OPERATORE SOCIO"              profilo_agenas="OPERATORE_SOCIO_SANITARIO" />
   </mapping_profili>
 
+  <!-- ──────────────────────────────────────────────────────────
+       Discipline DB che afferiscono a quest'area.
+       ────────────────────────────────────────────────────────── -->
+  <discipline_db>
+    <disciplina pattern="RADIODIAGNOSTICA|RADIOTERAPIA|MEDICINA NUCLEARE|NEURORADIOLOGIA"
+                profilo_agenas="DIRIGENTE_MEDICO_RADIOLOGIA" />
+    <!-- UO il cui nome indica appartenenza all'area
+         (escluse dal conteggio "fuori area") -->
+    <uo_in_area pattern="RADIODIAGNOSTICA|RADIOTERAPIA|RADIOLOGIA|MEDICINA NUCLEARE|NEURORADIOLOGIA" />
+  </discipline_db>
+
 </IndicatoriAgenasRadiologia>

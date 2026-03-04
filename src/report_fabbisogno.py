@@ -703,6 +703,24 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
         if indicatori_sale_operatorie else []
     )
 
+    # ------------------------------------------------------------------
+    # discipline_db per ogni area (usate per colonna "Altre aree")
+    # ------------------------------------------------------------------
+    def _get_disc_db(ind_dict):
+        return ind_dict.get('discipline_db', []) if ind_dict else []
+
+    discipline_db_map = {
+        'materno_infantile': _get_disc_db(indicatori_agenas),
+        'radiologia':        _get_disc_db(indicatori_radiologia),
+        'anatomia_pat':      _get_disc_db(indicatori_anatomia_pat),
+        'laboratorio':       _get_disc_db(indicatori_laboratorio),
+        'medicina_legale':   _get_disc_db(indicatori_med_legale),
+        'trasfusionale':     _get_disc_db(indicatori_trasfusionale),
+        'emergenza_urgenza': _get_disc_db(indicatori_emergenza),
+        'terapia_intensiva': _get_disc_db(indicatori_terapia_intensiva),
+        'sale_operatorie':   _get_disc_db(indicatori_sale_operatorie),
+    }
+
     import re as _re_agenas
 
     # Costruisci lista pattern CDC per strutture OdC (DM 77)
@@ -1829,6 +1847,10 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
             indicatori_dipendenze, fabb_dipendenze,
             indicatori_npia, fabb_npia,
             indicatori_carcere, fabb_carcere,
+            # Dati completi per colonna "Altre aree"
+            personale_all_df=personale_all_df,
+            discipline_db_map=discipline_db_map,
+            parti_per_presidio=parti_per_presidio,
         )
 
         # --- Foglio 5: FABBISOGNO TEORICO (riepilogo aziendale) ---

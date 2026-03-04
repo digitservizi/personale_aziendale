@@ -50,4 +50,17 @@
          profilo_agenas="INFERMIERE" />
   </mapping_profili>
 
+  <!-- ──────────────────────────────────────────────────────────
+       Discipline DB che afferiscono a quest'area.
+       Pattern regex applicato su DESC_DISCIPLINE (UPPER) per
+       identificare il personale "fuori area" con disciplina
+       coerente ma assegnato ad altre UO.
+       profilo_agenas: chiave del profilo AGENAS di riferimento.
+       ────────────────────────────────────────────────────────── -->
+  <discipline_db>
+    <disciplina pattern="ANESTESIA E RIANIMAZIONE|ANESTESIA"
+                profilo_agenas="DIRIGENTE_MEDICO" />
+    <uo_in_area pattern="ANESTESIA|RIANIMAZIONE|TERAPIA INTENSIVA" />
+  </discipline_db>
+
 </IndicatoriAgenasTerapiaIntensiva>

@@ -60,4 +60,13 @@
     <mappa pattern="\bOSS\b|OPERATORE SOCIO"    profilo_agenas="OPERATORE_SOCIO_SANITARIO" />
   </mapping_profili>
 
+  <!-- ──────────────────────────────────────────────────────────
+       Discipline DB che afferiscono a quest'area.
+       ────────────────────────────────────────────────────────── -->
+  <discipline_db>
+    <disciplina pattern="MEDICINA.*CHIRURGIA.*ACCETTAZIONE.*URGENZA|MED\..*CHIR\..*ACC\..*URG|MCAU"
+                profilo_agenas="DIRIGENTE_MEDICO" />
+    <uo_in_area pattern="PRONTO SOCCORSO|EMERGENZA|URGENZA|ACCETTAZIONE|118|MCAU" />
+  </discipline_db>
+
 </IndicatoriAgenasEmergenzaUrgenza>

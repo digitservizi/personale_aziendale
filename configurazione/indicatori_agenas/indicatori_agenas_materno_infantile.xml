@@ -56,6 +56,8 @@
       <unita pattern="OSTETRICIA|GINECOLOGIA"
              profilo_agenas="DIRIGENTE_MEDICO_OSTETRICIA"
              note="SC/SS Ostetricia e Ginecologia" />
+      <unita pattern="MATERNO INFANTILE|CONSULTORI"
+             note="SS Materno Infantile e Consultori Familiari - profilo medico determinato da disciplina" />
     </mapping_unita_operative>
 
     <!-- ──────────────────────────────────────────────────────────
@@ -71,6 +73,19 @@
       <mappa pattern="INFERMIER"                  profilo_agenas="INFERMIERE" />
       <mappa pattern="\bOSS\b|OPERATORE SOCIO"     profilo_agenas="OPERATORE_SOCIO_SANITARIO" />
     </mapping_profili>
+
+    <!-- ──────────────────────────────────────────────────────────
+         Discipline DB che afferiscono a quest'area.
+         ────────────────────────────────────────────────────────── -->
+    <discipline_db>
+      <disciplina pattern="PEDIATRIA|NEONATOLOGIA"
+                  profilo_agenas="DIRIGENTE_MEDICO_PEDIATRIA" />
+      <disciplina pattern="OSTETRICIA|GINECOLOGIA"
+                  profilo_agenas="DIRIGENTE_MEDICO_OSTETRICIA" />
+      <!-- UO il cui nome indica appartenenza all'area
+           (escluse dal conteggio "fuori area") -->
+      <uo_in_area pattern="MATERNO|PEDIATRIA|NEONATOLOGIA|OSTETRICIA|GINECOLOGIA|CONSULTORI" />
+    </discipline_db>
 
   </AreaMaternoInfantile>
 

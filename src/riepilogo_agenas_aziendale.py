@@ -55,6 +55,329 @@ FILL_REGIME = PatternFill(
 FONT_SECTION = Font(bold=True, size=12, color='1F4E79')
 FONT_NOTE = Font(italic=True, size=9, color='555555')
 
+FILL_ALTRE_AREE = PatternFill(
+    start_color='FFF2CC', end_color='FFF2CC', fill_type='solid')   # giallino
+
+
+# ============================================================
+# HELPER: CONTEGGIO PERSONALE FUORI AREA (ALTRE AREE/MANSIONI)
+# ============================================================
+
+def _conta_fuori_area(personale_all_df, discipline_db, tot_in_area):
+    """Calcola per ogni profilo_agenas quante persone nel DB hanno la
+    disciplina corrispondente ma NON risultano conteggiate in area.
+
+    Parametri
+    ---------
+    personale_all_df : DataFrame  – dati completi personale (tutte le sedi)
+    discipline_db : list[dict]    – lista di {pattern, profilo_agenas,
+                                    uo_in_area (opz.)} dal tag
+                                    <discipline_db> dell'XML
+    tot_in_area : dict            – {profilo_agenas: n_in_area}
+                                    totale conteggiato nei presidi
+
+    Ritorna
+    -------
+    (dict, list)
+        dict  {profilo_agenas: n_fuori_area}
+        list  nomi UO (DESC_SC_SSD_SS) unici delle persone fuori area
+    """
+    if not discipline_db or personale_all_df is None:
+        return {}, []
+
+    import pandas as _pd
+
+    result = {}
+    # Maschera cumulativa "fuori area" per raccogliere le UO
+    fuori_mask_global = _pd.Series(False, index=personale_all_df.index)
+
+    # Recupera il pattern uo_in_area (uguale per tutti gli entry)
+    uo_in_area_pat = None
+    for entry in discipline_db:
+        if entry.get('uo_in_area'):
+            uo_in_area_pat = entry['uo_in_area']
+            break
+
+    sede_col = personale_all_df['DESC_SEDE_FISICA'].astype(str).str.upper()
+    uo_col = personale_all_df['DESC_SC_SSD_SS'].astype(str).str.upper()
+
+    # Maschera: persona è "in area" se è in un P.O. OPPURE la sua UO
+    # matcha il pattern uo_in_area dell'area AGENAS
+    in_po_mask = sede_col.str.contains('P\\.O\\.', na=False)
+    if uo_in_area_pat:
+        in_uo_area_mask = uo_col.str.contains(
+            uo_in_area_pat, na=False, regex=True)
+    else:
+        in_uo_area_mask = _pd.Series(False, index=personale_all_df.index)
+    in_area_mask = in_po_mask | in_uo_area_mask
+
+    for entry in discipline_db:
+        pat = entry.get('pattern', '')
+        prof = entry.get('profilo_agenas', '')
+        if not pat or not prof:
+            continue
+
+        disc_col = personale_all_df['DESC_DISCIPLINE'].astype(str).str.upper()
+        match_mask = disc_col.str.contains(pat, na=False, regex=True)
+
+        # Fuori area: ha la disciplina ma non è "in area"
+        fuori_mask = match_mask & ~in_area_mask
+        n_fuori = int(fuori_mask.sum())
+        result[prof] = result.get(prof, 0) + n_fuori
+        fuori_mask_global = fuori_mask_global | fuori_mask
+
+    # Identifica UO dei fuori area
+    uo_fuori = (
+        personale_all_df.loc[fuori_mask_global, 'DESC_SC_SSD_SS']
+        .dropna().astype(str).str.strip()
+    )
+    # Aggiungi la sede tra parentesi per disambiguare
+    sede_fuori = (
+        personale_all_df.loc[fuori_mask_global, 'DESC_SEDE_FISICA']
+        .fillna('').astype(str).str.strip()
+    )
+    uo_con_sede = []
+    for u, s in zip(uo_fuori, sede_fuori):
+        if not u or u == 'nan':
+            continue
+        # Estrai sigla breve della sede (es. "IS" da "ISERNIA - ...")
+        sigla = s.split(' -')[0].strip() if s else ''
+        label = f"{u} ({sigla})" if sigla else u
+        uo_con_sede.append(label)
+    uo_uniche = sorted(set(uo_con_sede))
+
+    return result, uo_uniche
+
+
+# ============================================================
+# HELPER: TABELLA DISTRIBUZIONE ANESTESISTI PER CDC
+# ============================================================
+
+def _scrivi_distribuzione_anestesisti(ws, start_row, personale_all_df):
+    """Scrive una tabellina con la distribuzione degli anestesisti per CDC.
+
+    Mostra in quali centri di costo sono distribuiti i dirigenti medici
+    con disciplina Anestesia, suddivisi per presidio.
+
+    Ritorna la riga successiva libera.
+    """
+    if personale_all_df is None:
+        return start_row
+
+    import pandas as _pd
+
+    disc_col = personale_all_df['DESC_DISCIPLINE'].astype(str).str.upper()
+    prof_col = (personale_all_df['DESC_PROFILO_PROFESSIONALE']
+                .astype(str).str.upper())
+    mask = (disc_col.str.contains('ANESTESIA', na=False, regex=True)
+            & prof_col.str.contains('DIRIGENTE MEDICO', na=False))
+    anest = personale_all_df[mask].copy()
+
+    if anest.empty:
+        return start_row
+
+    anest['DESC_TIPO_CDC'] = anest['DESC_TIPO_CDC'].fillna('(non assegnato)')
+    anest['DESC_SEDE_FISICA'] = anest['DESC_SEDE_FISICA'].fillna('(vuoto)')
+
+    # Calcolo sigla sede (CB, IS, TE, ...)
+    anest['_SIGLA_SEDE'] = (
+        anest['DESC_SEDE_FISICA'].astype(str)
+        .str.split(' -').str[0].str.strip()
+        .str[:2]   # prime 2 lettere es. CA→CB approx
+    )
+    # Meglio usare la prima parola abbreviata
+    def _sigla(sede):
+        s = str(sede).upper().strip()
+        if 'CAMPOBASSO' in s:
+            return 'CB'
+        if 'ISERNIA' in s:
+            return 'IS'
+        if 'TERMOLI' in s or 'LARINO' in s:
+            return 'TE'
+        return s.split(' ')[0][:4]
+    anest['_SIGLA_SEDE'] = anest['DESC_SEDE_FISICA'].apply(_sigla)
+
+    # Semplifica nome CDC (rimuove prefisso "OSP. xxx -")
+    # e accorpa i costi comuni con la terapia intensiva
+    def _cdc_breve(cdc):
+        s = str(cdc)
+        # Rimuove "OSP. CARDARELLI - ", "OSP. S. TIMOTEO - ", ecc.
+        parts = s.split(' - ', 1)
+        if len(parts) > 1 and parts[0].startswith('OSP.'):
+            s = parts[1].strip()
+        # Accorpa "COSTI COMUNI" → "TERAPIA INTENSIVA - DEGENZE ORD."
+        if 'COSTI COMUNI' in s.upper():
+            s = 'TERAPIA INTENSIVA - DEGENZE ORD.'
+        return s
+    anest['_CDC_BREVE'] = anest['DESC_TIPO_CDC'].apply(_cdc_breve)
+
+    # Raggruppa per CDC breve
+    grp = (anest.groupby('_CDC_BREVE')
+           .agg(
+               N=('_CDC_BREVE', 'size'),
+               sedi=('_SIGLA_SEDE', lambda x: x.value_counts()
+                     .to_dict()),
+           )
+           .sort_values('N', ascending=False)
+           .reset_index())
+
+    row = start_row
+    # Titolo
+    ws.merge_cells(start_row=row, start_column=1,
+                   end_row=row, end_column=5)
+    ws.cell(row=row, column=1,
+            value="Distribuzione Dirigenti Medici Anestesisti "
+                  f"per Centro di Costo (tot. {len(anest)})"
+            ).font = Font(bold=True, size=10, color='1F4E79')
+    row += 1
+
+    # Header
+    headers = ['Centro di Costo', 'N.', 'Distribuzione per sede']
+    fills_h = [FILL_HEADER, FILL_HEADER, FILL_HEADER]
+    for ci, h in enumerate(headers):
+        c = ws.cell(row=row, column=ci + 1, value=h)
+        c.font = FONT_HEADER
+        c.fill = fills_h[ci]
+        c.border = THIN_BORDER
+        c.alignment = ALIGN_CENTER
+    row += 1
+
+    # Righe dati
+    for i, r in grp.iterrows():
+        fill = FILL_A if (i % 2 == 0) else FILL_B
+        sedi_str = ", ".join(
+            f"{k}={v}" for k, v in sorted(r['sedi'].items()))
+        vals = [r['_CDC_BREVE'], r['N'], sedi_str]
+        for ci, v in enumerate(vals):
+            c = ws.cell(row=row, column=ci + 1, value=v)
+            c.fill = fill
+            c.border = THIN_BORDER
+        row += 1
+
+    # Nota
+    row += 1
+    ws.merge_cells(start_row=row, start_column=1,
+                   end_row=row, end_column=5)
+    # Conta quanti sono in P.O.
+    n_po = int(anest['DESC_SEDE_FISICA'].astype(str).str.upper()
+               .str.contains('P\\.O\\.', na=False).sum())
+    n_fuori = len(anest) - n_po
+    ws.cell(row=row, column=1,
+            value=f"Di cui {n_po} assegnati ai presidi ospedalieri "
+                  f"e {n_fuori} ad altre strutture/mansioni "
+                  f"(cfr. colonna \"Altre aree\")."
+            ).font = FONT_NOTE
+
+    return row + 2
+
+
+def _scrivi_distribuzione_radiologi(ws, start_row, personale_all_df):
+    """Scrive una tabellina con la distribuzione dei radiologi per CDC.
+
+    Mostra in quali centri di costo sono distribuiti i dirigenti medici
+    con disciplina Radiodiagnostica / Medicina Nucleare, suddivisi per
+    presidio.
+
+    Ritorna la riga successiva libera.
+    """
+    if personale_all_df is None:
+        return start_row
+
+    import pandas as _pd
+
+    disc_col = personale_all_df['DESC_DISCIPLINE'].astype(str).str.upper()
+    prof_col = (personale_all_df['DESC_PROFILO_PROFESSIONALE']
+                .astype(str).str.upper())
+    mask = (disc_col.str.contains(
+                'RADIODIAGNOSTICA|RADIOTERAPIA|NEURORADIOLOGIA'
+                '|MEDICINA NUCLEARE', na=False, regex=True)
+            & prof_col.str.contains('DIRIGENTE MEDICO', na=False))
+    radio = personale_all_df[mask].copy()
+
+    if radio.empty:
+        return start_row
+
+    radio['DESC_TIPO_CDC'] = radio['DESC_TIPO_CDC'].fillna('(non assegnato)')
+    radio['DESC_SEDE_FISICA'] = radio['DESC_SEDE_FISICA'].fillna('(vuoto)')
+
+    # Sigla sede
+    def _sigla(sede):
+        s = str(sede).upper().strip()
+        if 'CAMPOBASSO' in s:
+            return 'CB'
+        if 'ISERNIA' in s:
+            return 'IS'
+        if 'TERMOLI' in s or 'LARINO' in s:
+            return 'TE'
+        return s.split(' ')[0][:4]
+    radio['_SIGLA_SEDE'] = radio['DESC_SEDE_FISICA'].apply(_sigla)
+
+    # Semplifica nome CDC
+    def _cdc_breve(cdc):
+        s = str(cdc)
+        parts = s.split(' - ', 1)
+        if len(parts) > 1 and parts[0].startswith('OSP.'):
+            s = parts[1].strip()
+        return s
+    radio['_CDC_BREVE'] = radio['DESC_TIPO_CDC'].apply(_cdc_breve)
+
+    # Raggruppa per CDC breve
+    grp = (radio.groupby('_CDC_BREVE')
+           .agg(
+               N=('_CDC_BREVE', 'size'),
+               sedi=('_SIGLA_SEDE', lambda x: x.value_counts()
+                     .to_dict()),
+           )
+           .sort_values('N', ascending=False)
+           .reset_index())
+
+    row = start_row
+    # Titolo
+    ws.merge_cells(start_row=row, start_column=1,
+                   end_row=row, end_column=5)
+    ws.cell(row=row, column=1,
+            value="Distribuzione Dirigenti Medici Radiologia "
+                  f"per Centro di Costo (tot. {len(radio)})"
+            ).font = Font(bold=True, size=10, color='1F4E79')
+    row += 1
+
+    # Header
+    headers = ['Centro di Costo', 'N.', 'Distribuzione per sede']
+    for ci, h in enumerate(headers):
+        c = ws.cell(row=row, column=ci + 1, value=h)
+        c.font = FONT_HEADER
+        c.fill = FILL_HEADER
+        c.border = THIN_BORDER
+        c.alignment = ALIGN_CENTER
+    row += 1
+
+    # Righe dati
+    for i, r in grp.iterrows():
+        fill = FILL_A if (i % 2 == 0) else FILL_B
+        sedi_str = ", ".join(
+            f"{k}={v}" for k, v in sorted(r['sedi'].items()))
+        vals = [r['_CDC_BREVE'], r['N'], sedi_str]
+        for ci, v in enumerate(vals):
+            c = ws.cell(row=row, column=ci + 1, value=v)
+            c.fill = fill
+            c.border = THIN_BORDER
+        row += 1
+
+    # Nota
+    row += 1
+    ws.merge_cells(start_row=row, start_column=1,
+                   end_row=row, end_column=5)
+    n_po = int(radio['DESC_SEDE_FISICA'].astype(str).str.upper()
+               .str.contains('P\\.O\\.', na=False).sum())
+    n_fuori = len(radio) - n_po
+    ws.cell(row=row, column=1,
+            value=f"Di cui {n_po} assegnati ai presidi ospedalieri "
+                  f"e {n_fuori} ad altre strutture/mansioni "
+                  f"(cfr. colonna \"Altre aree\")."
+            ).font = FONT_NOTE
+
+    return row + 2
+
 
 # ============================================================
 # HELPER: DIVISORE VISUALE TRA SEZIONI
@@ -335,7 +658,7 @@ def _conta_territoriale(df, uo_patterns, profili_attesi):
             # se nessun uo_patterns, conta tutto
 
             for q in prof['qualifiche']:
-                if qual.upper() == q.upper():
+                if _re.search(q, qual, _re.IGNORECASE):
                     ti += qti
                     td += qtd
                     break
@@ -348,13 +671,16 @@ def _conta_territoriale(df, uo_patterns, profili_attesi):
 # ============================================================
 
 def _scrivi_totale_range(ws, start_row, titolo, nomi_profili,
-                         per_presidio_data):
+                         per_presidio_data, fuori_area=None,
+                         uo_fuori_area=None):
     """Scrive tabella TOTALE AZIENDALE per aree range-based.
 
     per_presidio_data: lista di dict con chiavi
         'fabb': {profilo_key: {'min': n, 'max': n}},
         'srv_ti': {profilo_key: n},
         'srv_td': {profilo_key: n},
+    fuori_area: dict {profilo_key: n} oppure None
+    uo_fuori_area: list[str] – nomi UO dove sono assegnati i fuori area
 
     Delta per presidio: 0 se in range, eccedenza se > max, carenza se < min.
     Esito totale = somma carenze e somma eccedenze separatamente.
@@ -362,8 +688,10 @@ def _scrivi_totale_range(ws, start_row, titolo, nomi_profili,
     if not per_presidio_data:
         return start_row
 
+    has_fuori = fuori_area and any(v > 0 for v in fuori_area.values())
+
     row = start_row + 1
-    N_COLS = 6
+    N_COLS = 7 if has_fuori else 6
 
     # Titolo
     ws.merge_cells(start_row=row, start_column=1,
@@ -383,6 +711,8 @@ def _scrivi_totale_range(ws, start_row, titolo, nomi_profili,
     # Intestazioni
     headers = ['Profilo', 'T.I.', 'T.D.', 'Totale',
                'Range AGENAS', 'Esito']
+    if has_fuori:
+        headers.insert(4, 'Altre aree')
     for ci, h in enumerate(headers, 1):
         c = ws.cell(row=row, column=ci, value=h)
         c.font = FONT_HEADER
@@ -429,25 +759,53 @@ def _scrivi_totale_range(ws, start_row, titolo, nomi_profili,
             esito = 'IN RANGE'
             fill_esito = FILL_OK
 
-        vals = [nomi_profili.get(prof_key, prof_key),
-                tot_ti, tot_td, tot, range_str, esito]
+        if has_fuori:
+            n_fuori = fuori_area.get(prof_key, 0)
+            vals = [nomi_profili.get(prof_key, prof_key),
+                    tot_ti, tot_td, tot,
+                    n_fuori if n_fuori else '',
+                    range_str, esito]
+        else:
+            vals = [nomi_profili.get(prof_key, prof_key),
+                    tot_ti, tot_td, tot, range_str, esito]
         for ci, v in enumerate(vals, 1):
             c = ws.cell(row=row, column=ci, value=v)
             c.fill = fill
             c.border = THIN_BORDER
         ws.cell(row=row, column=N_COLS).fill = fill_esito
+        if has_fuori and fuori_area.get(prof_key, 0) > 0:
+            ws.cell(row=row, column=5).fill = FILL_ALTRE_AREE
         row += 1
 
     # Nota piè di pagina
     row += 1
     ws.merge_cells(start_row=row, start_column=1,
                    end_row=row, end_column=N_COLS)
-    ws.cell(row=row, column=1,
-            value="(*) Maggiorazione +15% per turnazione, guardie, "
-                  "ferie, malattie e altre indisponibilità. "
-                  "Le eccedenze/carenze sono calcolate come somma "
-                  "delle eccedenze/carenze dei singoli presidi."
-            ).font = FONT_NOTE
+    nota_testo = (
+        "(*) Maggiorazione +15% per turnazione, guardie, "
+        "ferie, malattie e altre indisponibilità. "
+        "Le eccedenze/carenze sono calcolate come somma "
+        "delle eccedenze/carenze dei singoli presidi."
+    )
+    ws.cell(row=row, column=1, value=nota_testo).font = FONT_NOTE
+    if has_fuori:
+        row += 1
+        ws.merge_cells(start_row=row, start_column=1,
+                       end_row=row, end_column=N_COLS)
+        ws.cell(row=row, column=1,
+                value="\"Altre aree\": personale con disciplina "
+                      "corrispondente ma assegnato a UO al di fuori "
+                      "dell'area specifica (possibili limitazioni "
+                      "o incarichi diversi)."
+                ).font = FONT_NOTE
+        if uo_fuori_area:
+            row += 1
+            ws.merge_cells(start_row=row, start_column=1,
+                           end_row=row, end_column=N_COLS)
+            ws.cell(row=row, column=1,
+                    value="UO di assegnazione: "
+                          + ", ".join(uo_fuori_area)
+                    ).font = FONT_NOTE
 
     return row + 1
 
@@ -457,19 +815,24 @@ def _scrivi_totale_range(ws, start_row, titolo, nomi_profili,
 # ============================================================
 
 def _scrivi_totale_fte(ws, start_row, titolo, nomi_profili,
-                       per_presidio_data):
+                       per_presidio_data, fuori_area=None,
+                       uo_fuori_area=None):
     """Scrive tabella TOTALE AZIENDALE per aree FTE-based.
 
     per_presidio_data: lista di dict con chiavi
         'fabb': {profilo_key: {'fte_atteso': n, ...}},
         'srv_ti': {profilo_key: n},
         'srv_td': {profilo_key: n},
+    fuori_area: dict {profilo_key: n} oppure None
+    uo_fuori_area: list[str] – nomi UO dove sono assegnati i fuori area
     """
     if not per_presidio_data:
         return start_row
 
+    has_fuori = fuori_area and any(v > 0 for v in fuori_area.values())
+
     row = start_row + 1
-    N_COLS = 6
+    N_COLS = 7 if has_fuori else 6
 
     ws.merge_cells(start_row=row, start_column=1,
                    end_row=row, end_column=N_COLS)
@@ -485,6 +848,8 @@ def _scrivi_totale_fte(ws, start_row, titolo, nomi_profili,
     row += 2
 
     headers = ['Profilo', 'FTE Atteso', 'T.I.', 'T.D.', 'Totale', 'Esito']
+    if has_fuori:
+        headers.insert(5, 'Altre aree')
     for ci, h in enumerate(headers, 1):
         c = ws.cell(row=row, column=ci, value=h)
         c.font = FONT_HEADER
@@ -526,13 +891,22 @@ def _scrivi_totale_fte(ws, start_row, titolo, nomi_profili,
             esito = 'CONFORME'
             fill_esito = FILL_OK
 
-        vals = [nomi_profili.get(prof_key, prof_key),
-                tot_fte, tot_ti, tot_td, tot, esito]
+        if has_fuori:
+            n_fuori = fuori_area.get(prof_key, 0)
+            vals = [nomi_profili.get(prof_key, prof_key),
+                    tot_fte, tot_ti, tot_td, tot,
+                    n_fuori if n_fuori else '',
+                    esito]
+        else:
+            vals = [nomi_profili.get(prof_key, prof_key),
+                    tot_fte, tot_ti, tot_td, tot, esito]
         for ci, v in enumerate(vals, 1):
             c = ws.cell(row=row, column=ci, value=v)
             c.fill = fill
             c.border = THIN_BORDER
         ws.cell(row=row, column=N_COLS).fill = fill_esito
+        if has_fuori and fuori_area.get(prof_key, 0) > 0:
+            ws.cell(row=row, column=6).fill = FILL_ALTRE_AREE
         row += 1
 
     row += 1
@@ -542,6 +916,24 @@ def _scrivi_totale_fte(ws, start_row, titolo, nomi_profili,
             value="Le eccedenze/carenze sono calcolate come somma "
                   "delle eccedenze/carenze dei singoli presidi."
             ).font = FONT_NOTE
+    if has_fuori:
+        row += 1
+        ws.merge_cells(start_row=row, start_column=1,
+                       end_row=row, end_column=N_COLS)
+        ws.cell(row=row, column=1,
+                value="\"Altre aree\": personale con disciplina "
+                      "corrispondente ma assegnato a UO al di fuori "
+                      "dell'area specifica (possibili limitazioni "
+                      "o incarichi diversi)."
+                ).font = FONT_NOTE
+        if uo_fuori_area:
+            row += 1
+            ws.merge_cells(start_row=row, start_column=1,
+                           end_row=row, end_column=N_COLS)
+            ws.cell(row=row, column=1,
+                    value="UO di assegnazione: "
+                          + ", ".join(sorted(uo_fuori_area))
+                    ).font = FONT_NOTE
 
     return row + 1
 
@@ -552,16 +944,23 @@ def _scrivi_totale_fte(ws, start_row, titolo, nomi_profili,
 
 def _scrivi_totale_fte_combo(ws, start_row, per_presidio_data,
                              fabb_ti_per_presidio,
-                             fabb_so_per_presidio):
+                             fabb_so_per_presidio,
+                             fuori_area=None,
+                             uo_fuori_area=None):
     """Scrive tabella TOTALE AZIENDALE per area combinata TI+BO.
 
     per_presidio_data: lista di dict con chiavi
         'presidio': nome_presidio,
         'srv_ti': {profilo_key: n},
         'srv_td': {profilo_key: n},
+    fuori_area: dict {profilo_key: n} oppure None
+                (la chiave è la 'key' del profilo combo, es.
+                DIRIGENTE_MEDICO)
     """
     if not per_presidio_data:
         return start_row
+
+    has_fuori = fuori_area and any(v > 0 for v in fuori_area.values())
 
     _PROFILI = [
         {'label': 'Dirigenti Medici', 'key': 'DIRIGENTE_MEDICO',
@@ -575,7 +974,7 @@ def _scrivi_totale_fte_combo(ws, start_row, per_presidio_data,
     ]
 
     row = start_row + 1
-    N_COLS = 8
+    N_COLS = 9 if has_fuori else 8
 
     ws.merge_cells(start_row=row, start_column=1,
                    end_row=row, end_column=N_COLS)
@@ -593,6 +992,8 @@ def _scrivi_totale_fte_combo(ws, start_row, per_presidio_data,
 
     headers = ['Profilo', 'FTE TI', 'FTE BO', 'FTE Area',
                'T.I.', 'T.D.', 'Totale', 'Esito']
+    if has_fuori:
+        headers.insert(7, 'Altre aree')
     for ci, h in enumerate(headers, 1):
         c = ws.cell(row=row, column=ci, value=h)
         c.font = FONT_HEADER
@@ -646,14 +1047,24 @@ def _scrivi_totale_fte_combo(ws, start_row, per_presidio_data,
             esito = 'CONFORME'
             fill_esito = FILL_OK
 
-        vals = [prof_info['label'],
-                tot_fte_ti, tot_fte_so, tot_fte_area,
-                tot_srv_ti, tot_srv_td, tot, esito]
+        if has_fuori:
+            n_fuori = fuori_area.get(prof_info['key'], 0)
+            vals = [prof_info['label'],
+                    tot_fte_ti, tot_fte_so, tot_fte_area,
+                    tot_srv_ti, tot_srv_td, tot,
+                    n_fuori if n_fuori else '',
+                    esito]
+        else:
+            vals = [prof_info['label'],
+                    tot_fte_ti, tot_fte_so, tot_fte_area,
+                    tot_srv_ti, tot_srv_td, tot, esito]
         for ci, v in enumerate(vals, 1):
             c = ws.cell(row=row, column=ci, value=v)
             c.fill = fill
             c.border = THIN_BORDER
         ws.cell(row=row, column=N_COLS).fill = fill_esito
+        if has_fuori and fuori_area.get(prof_info['key'], 0) > 0:
+            ws.cell(row=row, column=8).fill = FILL_ALTRE_AREE
         row += 1
 
     row += 1
@@ -663,6 +1074,24 @@ def _scrivi_totale_fte_combo(ws, start_row, per_presidio_data,
             value="Le eccedenze/carenze sono calcolate come somma "
                   "delle eccedenze/carenze dei singoli presidi."
             ).font = FONT_NOTE
+    if has_fuori:
+        row += 1
+        ws.merge_cells(start_row=row, start_column=1,
+                       end_row=row, end_column=N_COLS)
+        ws.cell(row=row, column=1,
+                value="\"Altre aree\": personale con disciplina "
+                      "corrispondente ma assegnato a UO al di fuori "
+                      "dell'area specifica (possibili limitazioni "
+                      "o incarichi diversi)."
+                ).font = FONT_NOTE
+        if uo_fuori_area:
+            row += 1
+            ws.merge_cells(start_row=row, start_column=1,
+                           end_row=row, end_column=N_COLS)
+            ws.cell(row=row, column=1,
+                    value="UO di assegnazione: "
+                          + ", ".join(sorted(uo_fuori_area))
+                    ).font = FONT_NOTE
 
     return row + 1
 
@@ -847,7 +1276,8 @@ def _scrivi_totale_territoriale(ws, start_row, indicatori,
 def _scrivi_riepilogo_trasfusionale_aziendale(
         ws, start_row, grouped,
         fabb_trasf_per_presidio,
-        mapping_uo_trasf, mapping_profili_trasf):
+        mapping_uo_trasf, mapping_profili_trasf,
+        fuori_area=None, uo_fuori_area=None):
     """Tabella riepilogativa aziendale medicina trasfusionale.
 
     Per la trasfusionale c'è tipicamente un solo presidio, quindi
@@ -884,6 +1314,8 @@ def _scrivi_riepilogo_trasfusionale_aziendale(
         "AREA MEDICINA TRASFUSIONALE",
         nomi_profili,
         per_pres,
+        fuori_area=fuori_area,
+        uo_fuori_area=uo_fuori_area,
     )
 
 
@@ -968,6 +1400,10 @@ def scrivi_foglio_riepilogo_agenas(
         indicatori_dipendenze, fabb_dipendenze,
         indicatori_npia, fabb_npia,
         indicatori_carcere, fabb_carcere,
+        # --- Dati completi per colonna "Altre aree" ---
+        personale_all_df=None,
+        discipline_db_map=None,
+        parti_per_presidio=None,
 ):
     """Crea il foglio 'FABBISOGNO AGENAS' nel workbook del riepilogo
     aziendale.
@@ -1016,6 +1452,34 @@ def scrivi_foglio_riepilogo_agenas(
             'livello': livello_label,
         })
 
+    # ------------------------------------------------------------------
+    # Helper per calcolo "Altre aree" (personale fuori area)
+    # ------------------------------------------------------------------
+    _disc_map = discipline_db_map or {}
+
+    def _calc_fuori(area_key, per_pres):
+        """Calcola fuori_area per l'area indicata.
+
+        Somma il tot TI+TD in area dai per_pres e poi confronta
+        col totale nel DB tramite _conta_fuori_area.
+
+        Ritorna (fuori_area_dict, uo_list) oppure (None, []).
+        """
+        disc_list = _disc_map.get(area_key, [])
+        if not disc_list or personale_all_df is None:
+            return None, []
+        # Somma in-area per profilo
+        tot_in_area = {}
+        for pd in per_pres:
+            for prof_key in pd['srv_ti']:
+                tot_in_area[prof_key] = (
+                    tot_in_area.get(prof_key, 0)
+                    + pd['srv_ti'].get(prof_key, 0)
+                    + pd['srv_td'].get(prof_key, 0)
+                )
+        return _conta_fuori_area(personale_all_df, disc_list,
+                                 tot_in_area)
+
     # ==================================================================
     # AREA MATERNO INFANTILE
     # ==================================================================
@@ -1040,9 +1504,42 @@ def scrivi_foglio_riepilogo_agenas(
                     'srv_td': srv_td,
                 })
         if per_pres:
+            _fa_mat, _uo_fa_mat = _calc_fuori(
+                'materno_infantile', per_pres)
             row = _scrivi_totale_range(
                 ws, row + 1, "AREA MATERNO INFANTILE",
-                _NOMI_MATERNO, per_pres)
+                _NOMI_MATERNO, per_pres,
+                fuori_area=_fa_mat,
+                uo_fuori_area=_uo_fa_mat)
+            # Nota con numero di parti rilevati per presidio
+            if parti_per_presidio:
+                _parti_items = []
+                for cd in cities_data:
+                    if cd['presidio']:
+                        n = parti_per_presidio.get(
+                            cd['presidio'], 0)
+                        if n:
+                            _parti_items.append(
+                                f"{cd['citta']} {n}")
+                if _parti_items:
+                    _tot_parti = sum(
+                        parti_per_presidio.get(
+                            cd['presidio'], 0)
+                        for cd in cities_data
+                        if cd['presidio'])
+                    row += 1
+                    _ncols_m = 7 if (_fa_mat and any(
+                        v > 0 for v in _fa_mat.values()
+                    )) else 6
+                    ws.merge_cells(
+                        start_row=row, start_column=1,
+                        end_row=row, end_column=_ncols_m)
+                    ws.cell(
+                        row=row, column=1,
+                        value="Parti rilevati: "
+                              + ", ".join(_parti_items)
+                              + f"  (Totale: {_tot_parti})"
+                    ).font = FONT_NOTE
 
     # ==================================================================
     # AREA SERVIZI DI RADIOLOGIA
@@ -1069,9 +1566,28 @@ def scrivi_foglio_riepilogo_agenas(
                     'srv_td': srv_td,
                 })
         if per_pres:
+            _fa_radio, _uo_fa_radio = _calc_fuori(
+                'radiologia', per_pres)
             row = _scrivi_totale_range(
                 ws, row + 1, "AREA SERVIZI DI RADIOLOGIA",
-                _NOMI_RADIOLOGIA, per_pres)
+                _NOMI_RADIOLOGIA, per_pres,
+                fuori_area=_fa_radio,
+                uo_fuori_area=_uo_fa_radio)
+            # Nota esplicativa composizione Dir. Medici Radiologia
+            _ncols_r = 7 if (_fa_radio and any(
+                v > 0 for v in _fa_radio.values())) else 6
+            row += 1
+            ws.merge_cells(start_row=row, start_column=1,
+                           end_row=row, end_column=_ncols_r)
+            ws.cell(row=row, column=1,
+                    value="N.B. I Dir. Medici Radiologia comprendono "
+                          "i medici con disciplina Radiodiagnostica e "
+                          "Medicina Nucleare afferenti all'area dei "
+                          "servizi di Radiologia (Tab. 13 AGENAS)."
+                    ).font = FONT_NOTE
+            # Tabella distribuzione radiologi per CDC
+            row = _scrivi_distribuzione_radiologi(
+                ws, row + 2, personale_all_df)
 
     # ==================================================================
     # AREA ANATOMIA PATOLOGICA
@@ -1098,9 +1614,13 @@ def scrivi_foglio_riepilogo_agenas(
                     'srv_td': srv_td,
                 })
         if per_pres:
+            _fa_anap, _uo_fa_anap = _calc_fuori(
+                'anatomia_pat', per_pres)
             row = _scrivi_totale_range(
                 ws, row + 1, "AREA ANATOMIA PATOLOGICA",
-                _NOMI_ANAPATO, per_pres)
+                _NOMI_ANAPATO, per_pres,
+                fuori_area=_fa_anap,
+                uo_fuori_area=_uo_fa_anap)
 
     # ==================================================================
     # AREA SERVIZI DI LABORATORIO
@@ -1128,9 +1648,13 @@ def scrivi_foglio_riepilogo_agenas(
                     'srv_td': srv_td,
                 })
         if per_pres:
+            _fa_lab, _uo_fa_lab = _calc_fuori(
+                'laboratorio', per_pres)
             row = _scrivi_totale_range(
                 ws, row + 1, "AREA SERVIZI DI LABORATORIO",
-                _NOMI_LABORATORIO, per_pres)
+                _NOMI_LABORATORIO, per_pres,
+                fuori_area=_fa_lab,
+                uo_fuori_area=_uo_fa_lab)
 
     # ==================================================================
     # TECNICI DI LABORATORIO
@@ -1185,9 +1709,13 @@ def scrivi_foglio_riepilogo_agenas(
                     'srv_td': srv_td,
                 })
         if per_pres:
+            _fa_medl, _uo_fa_medl = _calc_fuori(
+                'medicina_legale', per_pres)
             row = _scrivi_totale_range(
                 ws, row + 1, "MEDICINA LEGALE",
-                _NOMI_MEDLEG, per_pres)
+                _NOMI_MEDLEG, per_pres,
+                fuori_area=_fa_medl,
+                uo_fuori_area=_uo_fa_medl)
 
     # ==================================================================
     # AREA MEDICINA TRASFUSIONALE
@@ -1206,10 +1734,24 @@ def scrivi_foglio_riepilogo_agenas(
                     df_completo=grouped,
                 )
         # Totale aziendale (tabella semplice)
+        # Calcolo fuori_area per trasfusionale
+        _fa_trasf = None
+        _uo_fa_trasf = []
+        _disc_trasf = _disc_map.get('trasfusionale', [])
+        if _disc_trasf and personale_all_df is not None:
+            _srv_ti_t, _srv_td_t = _conta_generico(
+                grouped, mapping_uo_trasf, mapping_profili_trasf,
+                match_cdc=False)
+            _tot_in_t = {k: _srv_ti_t.get(k, 0) + _srv_td_t.get(k, 0)
+                         for k in set(list(_srv_ti_t) + list(_srv_td_t))}
+            _fa_trasf, _uo_fa_trasf = _conta_fuori_area(
+                personale_all_df, _disc_trasf, _tot_in_t)
         row = _scrivi_riepilogo_trasfusionale_aziendale(
             ws, row + 1, grouped,
             fabb_trasf_per_presidio,
             mapping_uo_trasf, mapping_profili_trasf,
+            fuori_area=_fa_trasf,
+            uo_fuori_area=_uo_fa_trasf,
         )
 
         # UOC Trasfusionale – Fabbisogno Primaria (se configurato)
@@ -1256,9 +1798,13 @@ def scrivi_foglio_riepilogo_agenas(
                     'srv_td': srv_td,
                 })
         if per_pres:
+            _fa_emer, _uo_fa_emer = _calc_fuori(
+                'emergenza_urgenza', per_pres)
             row = _scrivi_totale_range(
                 ws, row + 1, "AREA EMERGENZA-URGENZA",
-                _NOMI_EMERGENZA, per_pres)
+                _NOMI_EMERGENZA, per_pres,
+                fuori_area=_fa_emer,
+                uo_fuori_area=_uo_fa_emer)
 
     # ==================================================================
     # AREA TERAPIA INTENSIVA (§ 8.1.1)
@@ -1285,10 +1831,14 @@ def scrivi_foglio_riepilogo_agenas(
                     'srv_td': srv_td,
                 })
         if per_pres:
+            _fa_ti, _uo_fa_ti = _calc_fuori(
+                'terapia_intensiva', per_pres)
             row = _scrivi_totale_fte(
                 ws, row + 1,
                 "AREA TERAPIA INTENSIVA (§ 8.1.1)",
-                _NOMI_TI, per_pres)
+                _NOMI_TI, per_pres,
+                fuori_area=_fa_ti,
+                uo_fuori_area=_uo_fa_ti)
 
     # ==================================================================
     # AREA SALE OPERATORIE (§ 8.1.2)
@@ -1315,10 +1865,14 @@ def scrivi_foglio_riepilogo_agenas(
                     'srv_td': srv_td,
                 })
         if per_pres:
+            _fa_so, _uo_fa_so = _calc_fuori(
+                'sale_operatorie', per_pres)
             row = _scrivi_totale_fte(
                 ws, row + 1,
                 "AREA SALE OPERATORIE (§ 8.1.2)",
-                _NOMI_SO, per_pres)
+                _NOMI_SO, per_pres,
+                fuori_area=_fa_so,
+                uo_fuori_area=_uo_fa_so)
 
     # ==================================================================
     # AREA ANESTESIA, T.I. E BLOCCO OPERATORIO (combinata)
@@ -1327,6 +1881,9 @@ def scrivi_foglio_riepilogo_agenas(
         row = _scrivi_divisore_area(
             ws, row + 1,
             "AREA ANESTESIA, T.I. E BLOCCO OPERATORIO")
+        # Tabellina distribuzione anestesisti per CDC
+        row = _scrivi_distribuzione_anestesisti(
+            ws, row, personale_all_df)
         per_pres_combo = []
         for cd in cities_data:
             if cd['presidio'] and (
@@ -1346,10 +1903,16 @@ def scrivi_foglio_riepilogo_agenas(
                     'srv_td': srv_td,
                 })
         if per_pres_combo:
+            # fuori_area combo: usa discipline_db di TI (ANESTESIA →
+            # DIRIGENTE_MEDICO) che corrisponde alla chiave combo
+            _fa_combo, _uo_fa_combo = _calc_fuori(
+                'terapia_intensiva', per_pres_combo)
             row = _scrivi_totale_fte_combo(
                 ws, row + 1, per_pres_combo,
                 fabb_ti_per_presidio or {},
                 fabb_so_per_presidio or {},
+                fuori_area=_fa_combo,
+                uo_fuori_area=_uo_fa_combo,
             )
 
     # ==================================================================

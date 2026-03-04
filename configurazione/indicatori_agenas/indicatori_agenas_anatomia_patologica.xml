@@ -57,4 +57,13 @@
            profilo_agenas="OPERATORE_SOCIO_SANITARIO" />
   </mapping_profili>
 
+  <!-- ──────────────────────────────────────────────────────────
+       Discipline DB che afferiscono a quest'area.
+       ────────────────────────────────────────────────────────── -->
+  <discipline_db>
+    <disciplina pattern="ANATOMIA PATOLOGIC"
+                profilo_agenas="DIRIGENTE_SANITARIO" />
+    <uo_in_area pattern="ANATOMIA PATOLOGIC" />
+  </discipline_db>
+
 </IndicatoriAgenasAnatomiaPatologica>
