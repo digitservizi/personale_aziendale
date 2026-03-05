@@ -289,6 +289,13 @@ def scrivi_foglio_riepilogo_fabbisogno_teorico(wb, grouped,
             "Fabbisogno basato su posti letto e intensità di cura. "
             "Inclusi solo reparti ospedalieri con indicatori validati "
             "(Dirigenti Medici, Infermieri, OSS). "
+            "La metodologia non tiene in considerazione le attività ambulatoriali, "
+            "le guardie interdivisionali o altri compiti trasversali: "
+            "commisura esclusivamente i posti letto al personale necessario "
+            "per gestirli. "
+            "Per ciascun servizio è garantito un minimo di 2 unità "
+            "per profilo al fine di assicurare la copertura di ferie "
+            "e indisponibilità. "
             "Delta = Totale in servizio - Fabbisogno Teorico "
             "(valori negativi = carenza)."
         ),

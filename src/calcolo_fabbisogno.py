@@ -39,12 +39,15 @@ def calculate_fabbisogno(ordinari, dh, utic,
                          reparto, profilo, sede='', calcoli_log=None):
     """Calcola il fabbisogno teorico di personale per un reparto.
 
+    I posti UTIC vengono sempre calcolati con intensità 'Intensiva'
+    (sono posti di terapia intensiva coronarica) e sommati al fabbisogno
+    della parte ordinaria+DH calcolata con l'intensità del reparto.
+
     Se calcoli_log è una lista, vi aggiunge un dict con tutti i parametri
     del calcolo (usato per la controprova).
     """
-    posti_letto_omogeneizzati = (
-        ordinari * 1 + dh * 0.5 + utic * 1
-    )
+    # ── Parte ordinaria + DH ─────────────────────────────────────
+    pl_ord = ordinari * 1 + dh * 0.5
 
     if intensity in indicators:
         indicator = indicators[intensity]
@@ -56,13 +59,37 @@ def calculate_fabbisogno(ordinari, dh, utic,
     ore_effettuate_turni = indicator['OreEffettuateTurni']
     ore_annue_lavoro_effettivo = indicator['OreAnnueLavoroEffettivo']
 
-    fabbisogno_teorico = (
-        posti_letto_omogeneizzati * tasso_occupazione
+    fabb_ord = (
+        pl_ord * tasso_occupazione
         * coefficiente_complessita * ore_effettuate_turni * 365
     ) / ore_annue_lavoro_effettivo
 
+    # ── Parte UTIC (intensità Intensiva) ─────────────────────────
+    fabb_utic = 0.0
+    if utic > 0 and intensity != 'Intensiva':
+        # I posti UTIC si calcolano sempre con coefficiente Intensiva
+        ind_int = indicators.get('Intensiva', indicator)
+        t_occ_int   = ind_int['TassoOccupazione'] / 100.0
+        coeff_int   = ind_int['CoefficienteComplessita']
+        h_tur_int   = ind_int['OreEffettuateTurni']
+        h_ann_int   = ind_int['OreAnnueLavoroEffettivo']
+        fabb_utic = (
+            utic * t_occ_int * coeff_int * h_tur_int * 365
+        ) / h_ann_int
+    elif utic > 0:
+        # Se il reparto è già Intensivo, UTIC rientra nel calcolo ordinario
+        fabb_utic = 0.0
+        pl_ord += utic  # ri-aggiungi al calcolo ordinario
+        fabb_ord = (
+            pl_ord * tasso_occupazione
+            * coefficiente_complessita * ore_effettuate_turni * 365
+        ) / ore_annue_lavoro_effettivo
+
+    fabbisogno_teorico = fabb_ord + fabb_utic
+    posti_letto_omogeneizzati = pl_ord + (utic if intensity != 'Intensiva' else 0)
+
     if calcoli_log is not None:
-        calcoli_log.append({
+        log_entry = {
             'sede':    sede,
             'reparto': reparto,
             'profilo': profilo,
@@ -73,7 +100,12 @@ def calculate_fabbisogno(ordinari, dh, utic,
             'h_tur':   ore_effettuate_turni,
             'h_ann':   ore_annue_lavoro_effettivo,
             'f_raw':   round(fabbisogno_teorico, 4),
-        })
+        }
+        if utic > 0 and intensity != 'Intensiva':
+            log_entry['utic'] = utic
+            log_entry['f_ord'] = round(fabb_ord, 4)
+            log_entry['f_utic'] = round(fabb_utic, 4)
+        calcoli_log.append(log_entry)
 
     return round(fabbisogno_teorico, 2)
 
@@ -187,6 +219,7 @@ def scrivi_controprova_xlsx(output_file, anno_analisi, data_esecuzione,
         'PL Omog.', 'Intensità',
         'T. Occ.', 'Coeff.', 'H. Turno', 'H. Annue',
         'F. Grezzo', 'F. Finale',
+        'PL UTIC', 'F. Ord.', 'F. UTIC',
     ])
 
     sedi = sorted(set(e['sede'] for e in calcoli_log))
@@ -208,6 +241,7 @@ def scrivi_controprova_xlsx(output_file, anno_analisi, data_esecuzione,
             e['pl_omg'], e['intensita'],
             e['t_occ'], e['coeff'], e['h_tur'], e['h_ann'],
             e['f_raw'], f_fin,
+            e.get('utic', ''), e.get('f_ord', ''), e.get('f_utic', ''),
         ], fill)
     _autofit(ws1)
     _freeze(ws1, 'C3')

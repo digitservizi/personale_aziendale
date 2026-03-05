@@ -1077,6 +1077,12 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
                 else math.ceil(val)
             )
             motivo = "CASO 2 (arrotondamento standard)"
+
+        # Minimo 2 unità per garantire copertura ferie/indisponibilità
+        if risultato == 1:
+            risultato = 2
+            motivo = "CASO 3 (minimo 2 per copertura ferie/indisponibilità)"
+
         if risultato != val:
             arrot_log.append({
                 'sede':    sede,
