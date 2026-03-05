@@ -1057,31 +1057,20 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
             val = float(val_raw)
         except (ValueError, TypeError):
             return val_raw
-        quantita = row['QUANTITA']
         sede = row['DESC_SEDE_FISICA']
         cdc = row['CENTRO_DI_COSTO']
         profilo = row['PROFILO_RAGGRUPPATO']
-        if val < 1:
-            risultato = (
-                1 if quantita == 0
-                else (1 if val >= 0.5 else 0)
-            )
-            motivo = (
-                "CASO 1 (minimo 1 - profilo assente)" if quantita == 0
-                else f"CASO 1 (arrotondamento < 1, quantità={quantita})"
-            )
-        else:
-            risultato = (
-                math.floor(val)
-                if (val - math.floor(val)) < 0.5
-                else math.ceil(val)
-            )
-            motivo = "CASO 2 (arrotondamento standard)"
+
+        # Arrotondamento sempre per ECCESSO (ceil) perché la metodologia
+        # non tiene conto di L.104, limitazioni, attività ambulatoriali,
+        # guardie interdivisionali, ecc.
+        risultato = math.ceil(val)
+        motivo = "Arrotondamento per eccesso (ceil)"
 
         # Minimo 2 unità per garantire copertura ferie/indisponibilità
-        if risultato == 1:
+        if risultato < 2 and val > 0:
             risultato = 2
-            motivo = "CASO 3 (minimo 2 per copertura ferie/indisponibilità)"
+            motivo = "Minimo 2 per copertura ferie/indisponibilità (ceil)"
 
         if risultato != val:
             arrot_log.append({

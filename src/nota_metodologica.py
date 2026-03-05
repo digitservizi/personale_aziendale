@@ -272,9 +272,14 @@ def _scrivi_foglio_metodologia(wb, indicators, posti_letto_citta, anno_analisi):
     row += 1
     d4 = ws.cell(row=row, column=1)
     d4.value = (
-        "Il fabbisogno calcolato \u00e8 un valore decimale. Poich\u00e9 "
-        "il personale \u00e8 indivisibile, si applicano le seguenti "
-        "regole di arrotondamento:"
+        "Il fabbisogno calcolato è un valore decimale. Poiché "
+        "il personale è indivisibile e la metodologia non tiene conto "
+        "di limitazioni ex L. 104/92, idoneità parziali, attività "
+        "ambulatoriali, guardie interdivisionali e altri compiti "
+        "trasversali, il valore è sempre arrotondato per eccesso. "
+        "Per ciascun servizio è inoltre garantito un minimo di 2 unità "
+        "per profilo al fine di assicurare la copertura di ferie "
+        "e indisponibilità."
     )
     d4.font = FONT_NORMAL
     ws.merge_cells(start_row=row, start_column=1,
@@ -303,17 +308,16 @@ def _scrivi_foglio_metodologia(wb, indicators, posti_letto_citta, anno_analisi):
     row += 1
 
     RULES = [
-        ('Fabbisogno < 1\n(profilo assente)',
-         'Se il profilo professionale non ha personale in servizio '
-         'nel reparto, il fabbisogno minimo \u00e8 fissato a 1 unit\u00e0.',
+        ('Arrotondamento\nper eccesso',
+         'Il fabbisogno grezzo viene sempre arrotondato all\'intero '
+         'superiore (ceiling) per compensare limitazioni ex L. 104/92, '
+         'idoneità parziali, attività ambulatoriali e altri compiti '
+         'non conteggiati dalla formula.',
          FILL_A),
-        ('Fabbisogno < 1\n(profilo presente)',
-         'Arrotondamento standard: se \u2265 0,5 \u2192 1;  '
-         'se < 0,5 \u2192 0.',
-         FILL_A),
-        ('Fabbisogno \u2265 1',
-         "Arrotondamento all'intero pi\u00f9 vicino: parte decimale "
-         '\u2265 0,5 \u2192 eccesso;  < 0,5 \u2192 difetto.',
+        ('Minimo 2 unità\nper servizio',
+         'Per ciascun servizio con posti letto è garantito un minimo '
+         'di 2 unità per profilo professionale, al fine di assicurare '
+         'la copertura di ferie e indisponibilità.',
          FILL_B),
     ]
     for caso, regola, fill in RULES:

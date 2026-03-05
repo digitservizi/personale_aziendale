@@ -492,19 +492,26 @@ class NotaMetodologicaPDF:
         items.append(Paragraph('4. Regole di arrotondamento', ST_SECTION))
         items.append(Paragraph(
             'Il fabbisogno calcolato è un valore decimale. Poiché il '
-            'personale è indivisibile, si applicano le seguenti regole:',
+            'personale è indivisibile e la metodologia non tiene conto '
+            'di limitazioni ex L. 104/92, idoneità parziali, attività '
+            'ambulatoriali, guardie interdivisionali e altri compiti '
+            'trasversali, il valore è sempre arrotondato per eccesso. '
+            'Per ciascun servizio è inoltre garantito un minimo di 2 unità '
+            'per profilo al fine di assicurare la copertura di ferie '
+            'e indisponibilità.',
             ST_BODY))
         items.append(Spacer(1, 2 * mm))
 
         RULES = [
-            ('Fabbisogno < 1 (profilo assente)',
-             'Se il profilo non ha personale in servizio nel reparto, '
-             'il fabbisogno minimo è fissato a 1 unità.'),
-            ('Fabbisogno < 1 (profilo presente)',
-             'Arrotondamento standard: ≥ 0,5 → 1; < 0,5 → 0.'),
-            ('Fabbisogno ≥ 1',
-             "Arrotondamento all'intero più vicino: parte decimale "
-             '≥ 0,5 → eccesso; < 0,5 → difetto.'),
+            ('Arrotondamento per eccesso',
+             'Il fabbisogno grezzo viene sempre arrotondato all\'intero '
+             'superiore (ceiling) per compensare limitazioni ex L. 104/92, '
+             'idoneità parziali, attività ambulatoriali e altri compiti '
+             'non conteggiati dalla formula.'),
+            ('Minimo 2 unità per servizio',
+             'Per ciascun servizio con posti letto è garantito un minimo '
+             'di 2 unità per profilo professionale, al fine di assicurare '
+             'la copertura di ferie e indisponibilità.'),
         ]
         rule_rows = [[_ph('Caso'), _ph('Regola applicata')]] + [
             [_p(c, ST_TD_BOLD), _p(r)]
