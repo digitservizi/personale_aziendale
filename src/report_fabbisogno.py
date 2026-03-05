@@ -5,7 +5,7 @@ generazione dei report Excel per città con RIEPILOGO e fogli dettaglio.
 
 import math
 import os
-from datetime import datetime
+from datetime import date, datetime
 
 import pandas as pd
 from openpyxl import Workbook
@@ -223,7 +223,6 @@ from src.tabelle_agenas import (
 from src.riepilogo_agenas_aziendale import scrivi_foglio_riepilogo_agenas
 from src.riepilogo_fabbisogno_teorico import scrivi_foglio_riepilogo_fabbisogno_teorico
 from src.riepilogo_veterinari import scrivi_foglio_veterinari
-from src.nota_metodologica import _scrivi_foglio_metodologia
 from src.report_atto_aziendale import scrivi_foglio_riepilogo_atto_medici
 from src.report_profili_atto_aziendale import scrivi_foglio_riepilogo_atto_profili
 
@@ -310,6 +309,26 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
     }
     personale_df = personale_df.fillna(_FILL_NA)
 
+    # ------------------------------------------------------------------
+    # ESCLUSIONE PERSONALE GIÀ CESSATO alla data odierna
+    # ------------------------------------------------------------------
+    _oggi = date.today()
+    if 'DT_CESSAZIONE' in personale_df.columns:
+        _dt_cess_pers = pd.to_datetime(
+            personale_df['DT_CESSAZIONE'], errors='coerce'
+        )
+        _mask_cessati = _dt_cess_pers.notna() & (_dt_cess_pers.dt.date <= _oggi)
+        _n_cessati = int(_mask_cessati.sum())
+        if _n_cessati:
+            print(f"  Esclusi {_n_cessati} dipendenti già cessati "
+                  f"(DT_CESSAZIONE <= {_oggi:%d/%m/%Y})")
+            personale_raw_df = personale_raw_df[
+                ~personale_raw_df.index.isin(
+                    personale_df.index[_mask_cessati]
+                )
+            ]
+            personale_df = personale_df[~_mask_cessati].copy()
+
     # Classificazione TI / TD (coerente con report atto aziendale)
     # TD = contratti esplicitamente temporanei; TI = tutto il resto
     _nat_u = personale_df['DESC_NATURA'].str.upper()
@@ -380,10 +399,23 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
     )
 
     anni_pensionamento = [anno_analisi + 1, anno_analisi + 2, anno_analisi + 3]
+
+    # Colonna cessazione unificata: pensionamento OPPURE fine contratto TD
+    # (DT_CESSAZIONE = pensionamento;  DT_CESSAZIONE_PERS = fine rapporto dal DB personale)
+    _dt_pens = pd.to_datetime(merged_df['DT_CESSAZIONE'], errors='coerce')
+    _dt_pers = pd.to_datetime(
+        merged_df.get('DT_CESSAZIONE_PERS'), errors='coerce'
+    ) if 'DT_CESSAZIONE_PERS' in merged_df.columns else pd.Series(
+        pd.NaT, index=merged_df.index
+    )
+    # Per i TD con data futura non ancora catturata dai pensionamenti:
+    # usa la data cessazione dal file personale quando non c'è pensionamento
+    merged_df['_DT_USCITA'] = _dt_pens.fillna(_dt_pers)
+
     for anno in anni_pensionamento:
-        merged_df[f'PENSIONAMENTI_{anno}'] = merged_df['DT_CESSAZIONE'].apply(
+        merged_df[f'PENSIONAMENTI_{anno}'] = merged_df['_DT_USCITA'].apply(
             lambda x, a=anno: (
-                1 if pd.to_datetime(x, errors='coerce').year == a else 0
+                1 if pd.notna(x) and x.year == a else 0
             )
         )
 
@@ -1133,7 +1165,7 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
         'FABBISOGNO_AGENAS': 'Fabbisogno AGENAS',
     }
     for anno in anni_pensionamento:
-        rename_cols[f'PENSIONAMENTI_{anno}'] = f'Pensionamenti {anno}'
+        rename_cols[f'PENSIONAMENTI_{anno}'] = f'Pens. e cessazioni {anno}'
     grouped = grouped.rename(columns=rename_cols)
 
     # ------------------------------------------------------------------
@@ -1152,404 +1184,37 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
             grouped['Sede'].str.split(sep, n=1).str[1].str.strip()
         )
 
-        # Aree speciali: non generano file separati per città
+        # Aree speciali: escluse dal riepilogo per area
         _AREE_SPECIALI = {'(Non assegnata)', 'LUNGHE ASSENZE',
                           'IN ATTESA DI ASSEGNAZIONE'}
-
-        file_outputs = []
-
-        for citta, df_citta in grouped.groupby('_CITTA', sort=True):
-            # Le aree speciali non generano file separati
-            # (i dati sono nel riepilogo aziendale + personale_non_assegnato)
-            if citta in _AREE_SPECIALI:
-                continue
-
-            nome_file = f"elaborati/analisi_personale_{citta}_{anno_analisi}.xlsx"
-            file_outputs.append(nome_file)
-            titolo_area = f"PERSONALE AZIENDALE AREA - {citta}"
-
-            wb = Workbook()
-            wb.remove(wb.active)
-
-            # ====== FOGLIO NOTA METODOLOGICA (primo foglio) ======
-            sedi_citta = set(df_citta['Sede'].unique())
-            pl_citta = {
-                k: v for k, v in posti_letto.items()
-                if k[0] in sedi_citta
-                and (int(v['ordinari']) + int(v['dh'])
-                     + int(v.get('utic', 0))
-                     + int(v.get('ds', 0))) > 0
-            }
-            _scrivi_foglio_metodologia(
-                wb, indicators, pl_citta, anno_analisi,
-            )
-
-            # ====== FOGLIO RIEPILOGO ======
-            col_pens = [f'Pensionamenti {a}' for a in anni_pensionamento]
-            col_quant_ti = 'Quantità T.I.'
-            col_quant_td = 'Quantità T.D.'
-            col_quant_tot = 'Totale'
-
-            ws_riep = wb.create_sheet(title='RIEPILOGO')
-            col_riep = (
-                ['Sede', 'Profilo Professionale',
-                 col_quant_ti, col_quant_td, col_quant_tot]
-                + col_pens + ['Proiezione']
-            )
-            n_col_riep = len(col_riep)
-
-            scrivi_titolo(ws_riep, f"RIEPILOGO PERSONALE - {citta}",
-                          n_col_riep)
-            scrivi_intestazioni(ws_riep, col_riep)
-
-            riep_row = 3
-            color_toggle_riep = 0
-            prev_luogo_riep = None
-
-            for luogo, df_luogo_riep in df_citta.groupby('_LUOGO', sort=True):
-                agg_riep = df_luogo_riep.groupby(
-                    'Profilo Professionale'
-                ).agg(
-                    **{
-                        col_quant_ti: (col_quant_ti, 'sum'),
-                        col_quant_td: (col_quant_td, 'sum'),
-                        **{cp: (cp, 'sum') for cp in col_pens},
-                    }
-                ).reset_index().sort_values('Profilo Professionale')
-
-                agg_riep[col_quant_tot] = (
-                    agg_riep[col_quant_ti] + agg_riep[col_quant_td]
-                )
-                agg_riep['Proiezione'] = (
-                    agg_riep[col_quant_tot] - agg_riep[col_pens].sum(axis=1)
-                )
-
-                if luogo != prev_luogo_riep:
-                    color_toggle_riep = 1 - color_toggle_riep
-                    prev_luogo_riep = luogo
-                fill_riep = FILL_A if color_toggle_riep else FILL_B
-
-                for _, r_riep in agg_riep.iterrows():
-                    valori = (
-                        [f'{citta} - {luogo}',
-                         r_riep['Profilo Professionale'],
-                         int(r_riep[col_quant_ti]),
-                         int(r_riep[col_quant_td]),
-                         int(r_riep[col_quant_tot])]
-                        + [int(r_riep[cp]) for cp in col_pens]
-                        + [int(r_riep['Proiezione'])]
-                    )
-                    scrivi_riga_dati(ws_riep, riep_row, valori, fill_riep)
-                    riep_row += 1
-
-            # --- Tabella rapporto Sanitario / Non Sanitario ---
-            sedi_citta_set = set(df_citta['Sede'].unique())
-            df_raw_citta = personale_all_df[
-                personale_all_df['DESC_SEDE_FISICA'].isin(sedi_citta_set)
-            ]
-            riep_row = _scrivi_tabella_sanitario(
-                ws_riep, riep_row + 2, df_raw_citta
-            )
-
-            # ====== FOGLI DETTAGLIO ======
-            for luogo, df_luogo in df_citta.groupby('_LUOGO', sort=True):
-                df_luogo_exp = df_luogo.drop(columns=['_CITTA', '_LUOGO'])
-                ws_det = _scrivi_foglio_con_titolo(
-                    wb, luogo, df_luogo_exp, titolo_area
-                )
-
-            # ====== TABELLE AGENAS NEL RIEPILOGO ======
-            # Identifica il P.O. di questa città per ottenere livello
-            presidio_citta = None
-            for pn in (livello_presidio or {}):
-                if citta.upper() in pn.upper():
-                    presidio_citta = pn
-                    break
-
-            if presidio_citta:
-                livello_label = (
-                    livello_presidio.get(presidio_citta, '')
-                    if livello_presidio else ''
-                )
-
-                # --- Materno-infantile ---
-                if fabb_agenas_per_presidio.get(presidio_citta):
-                    riep_row = _scrivi_tabella_agenas_materno_infantile(
-                        ws_riep, riep_row + 1, df_citta,
-                        fabb_agenas_per_presidio[presidio_citta],
-                        mapping_uo_agenas, mapping_profili_agenas,
-                        presidio_citta,
-                    )
-
-                # --- Radiologia ---
-                if fabb_radio_per_presidio.get(presidio_citta):
-                    riep_row = _scrivi_tabella_agenas_radiologia(
-                        ws_riep, riep_row + 1, df_citta,
-                        fabb_radio_per_presidio[presidio_citta],
-                        mapping_uo_radio, mapping_profili_radio,
-                        presidio_citta, livello_label,
-                        df_area=df_citta,
-                    )
-
-                # --- Anatomia patologica ---
-                if fabb_anapato_per_presidio.get(presidio_citta):
-                    riep_row = _scrivi_tabella_agenas_anatomia_patologica(
-                        ws_riep, riep_row + 1, df_citta,
-                        fabb_anapato_per_presidio[presidio_citta],
-                        mapping_uo_anapato, mapping_profili_anapato,
-                        presidio_citta, livello_label,
-                    )
-
-                # --- Servizi di laboratorio ---
-                if fabb_lab_per_presidio.get(presidio_citta):
-                    riep_row = _scrivi_tabella_agenas_laboratorio(
-                        ws_riep, riep_row + 1, df_citta,
-                        fabb_lab_per_presidio[presidio_citta],
-                        mapping_uo_lab, mapping_profili_lab,
-                        esclusioni_lab,
-                        presidio_citta, livello_label,
-                    )
-
-                # --- Tecnici di laboratorio ---
-                if fabb_teclab_per_presidio.get(presidio_citta):
-                    riep_row = _scrivi_tabella_agenas_tecnici_laboratorio(
-                        ws_riep, riep_row + 1, df_citta,
-                        fabb_teclab_per_presidio[presidio_citta],
-                        mapping_profili_teclab,
-                        presidio_citta, livello_label,
-                    )
-
-                # --- Medicina legale ---
-                if fabb_medleg_per_presidio.get(presidio_citta):
-                    riep_row = _scrivi_tabella_agenas_medicina_legale(
-                        ws_riep, riep_row + 1, df_citta,
-                        fabb_medleg_per_presidio[presidio_citta],
-                        mapping_uo_medleg, mapping_profili_medleg,
-                        presidio_citta, livello_label,
-                    )
-
-                # --- Trasfusionale ---
-                if fabb_trasf_per_presidio.get(presidio_citta):
-                    riep_row = _scrivi_tabella_agenas_trasfusionale(
-                        ws_riep, riep_row + 1, df_citta,
-                        fabb_trasf_per_presidio[presidio_citta],
-                        mapping_uo_trasf, mapping_profili_trasf,
-                        presidio_citta, livello_label,
-                        df_completo=grouped,
-                    )
-
-                # --- Fabbisogno UOC Trasfusionale (speciale Primaria) ---
-                if (fabb_trasf_speciale
-                        and fabb_trasf_speciale.get('sedi')):
-                    sede_princ = fabb_trasf_speciale['sedi'][0]['nome']
-                    if (citta.upper() in sede_princ.upper()
-                            or sede_princ.upper() in presidio_citta.upper()):
-                        riep_row = _scrivi_tabella_fabbisogno_uoc_trasfusionale(
-                            ws_riep, riep_row + 1, grouped,
-                            fabb_trasf_speciale, presidio_citta,
-                        )
-
-                # --- Emergenza-Urgenza ---
-                if fabb_emergenza_per_presidio.get(presidio_citta):
-                    riep_row = _scrivi_tabella_agenas_emergenza_urgenza(
-                        ws_riep, riep_row + 1, df_citta,
-                        fabb_emergenza_per_presidio[presidio_citta],
-                        mapping_uo_emergenza, mapping_profili_emergenza,
-                        presidio_citta, livello_label,
-                    )
-
-                # --- Terapia Intensiva (§ 8.1.1) ---
-                if fabb_ti_per_presidio.get(presidio_citta):
-                    riep_row = _scrivi_tabella_agenas_terapia_intensiva(
-                        ws_riep, riep_row + 1, df_citta,
-                        fabb_ti_per_presidio[presidio_citta],
-                        mapping_uo_ti, mapping_profili_ti,
-                        presidio_citta,
-                    )
-
-                # --- Sale Operatorie (§ 8.1.2) ---
-                if fabb_so_per_presidio.get(presidio_citta):
-                    riep_row = _scrivi_tabella_agenas_sale_operatorie(
-                        ws_riep, riep_row + 1, df_citta,
-                        fabb_so_per_presidio[presidio_citta],
-                        mapping_uo_so, mapping_profili_so,
-                        presidio_citta,
-                    )
-
-                # --- Area TI + Blocco Operatorio (combinata) ---
-                if (fabb_ti_per_presidio.get(presidio_citta)
-                        or fabb_so_per_presidio.get(presidio_citta)):
-                    riep_row = _scrivi_tabella_agenas_area_ti_bo(
-                        ws_riep, riep_row + 1, df_citta,
-                        fabb_ti_per_presidio.get(presidio_citta, {}),
-                        fabb_so_per_presidio.get(presidio_citta, {}),
-                        mapping_uo_ti, presidio_citta,
-                    )
-
-            # ====== TABELLE AGENAS TERRITORIALI (basate su popolazione) ======
-            citta_upper = citta.upper()
-
-            # --- Salute Mentale Adulti ---
-            if (fabb_salute_mentale
-                    and fabb_salute_mentale.get(citta_upper)):
-                riep_row = _scrivi_tabella_agenas_territoriale(
-                    ws_riep, riep_row + 1, df_citta,
-                    indicatori_salute_mentale,
-                    fabb_salute_mentale[citta_upper],
-                    citta_upper,
-                )
-
-            # --- Dipendenze Patologiche (SerD) ---
-            if (fabb_dipendenze
-                    and fabb_dipendenze.get(citta_upper)):
-                riep_row = _scrivi_tabella_agenas_territoriale(
-                    ws_riep, riep_row + 1, df_citta,
-                    indicatori_dipendenze,
-                    fabb_dipendenze[citta_upper],
-                    citta_upper,
-                )
-
-            # --- NPIA ---
-            if fabb_npia and fabb_npia.get(citta_upper):
-                riep_row = _scrivi_tabella_agenas_territoriale(
-                    ws_riep, riep_row + 1, df_citta,
-                    indicatori_npia,
-                    fabb_npia[citta_upper],
-                    citta_upper,
-                )
-
-            # --- Salute in Carcere ---
-            if fabb_carcere and fabb_carcere.get(citta_upper):
-                riep_row = _scrivi_tabella_agenas_territoriale(
-                    ws_riep, riep_row + 1, df_citta,
-                    indicatori_carcere,
-                    fabb_carcere[citta_upper],
-                    citta_upper,
-                )
-
-            auto_larghezza_colonne(ws_riep, col_riep)
-            wb.save(nome_file)
 
         # ==============================================================
         # RIEPILOGO AZIENDALE (file separato, dati di tutte le aree)
         # ==============================================================
-        col_pens = [f'Pensionamenti {a}' for a in anni_pensionamento]
+        col_pens = [f'Pens. e cessazioni {a}' for a in anni_pensionamento]
         col_quant_ti  = 'Quantità T.I.'
         col_quant_td  = 'Quantità T.D.'
         col_quant_tot = 'Totale'
 
         nome_file_az = f"elaborati/riepilogo_aziendale_{anno_analisi}.xlsx"
-        file_outputs.append(nome_file_az)
         wb_az = Workbook()
         wb_az.remove(wb_az.active)
 
-        # --- Foglio 1: RIEPILOGO PER AREA ---
-        ws_area = wb_az.create_sheet(title='RIEPILOGO PER AREA')
-        col_area = (
-            ['Area', 'Profilo Professionale',
-             col_quant_ti, col_quant_td, col_quant_tot]
-            + col_pens + ['Proiezione']
-        )
-        scrivi_titolo(ws_area,
-                      f"RIEPILOGO AZIENDALE PER AREA - {anno_analisi}",
-                      len(col_area))
-        scrivi_intestazioni(ws_area, col_area)
-
-        row_area = 3
-        color_t_area = 0
-        prev_citta_az = None
-
-        for citta_az, df_caz in grouped.groupby('_CITTA', sort=True):
-            if citta_az in _AREE_SPECIALI:
-                continue  # scritte dopo in tabella separata
-            agg_az = df_caz.groupby('Profilo Professionale').agg(
-                **{
-                    col_quant_ti:  (col_quant_ti, 'sum'),
-                    col_quant_td:  (col_quant_td, 'sum'),
-                    **{cp: (cp, 'sum') for cp in col_pens},
-                }
-            ).reset_index().sort_values('Profilo Professionale')
-            agg_az[col_quant_tot] = agg_az[col_quant_ti] + agg_az[col_quant_td]
-            agg_az['Proiezione'] = (
-                agg_az[col_quant_tot] - agg_az[col_pens].sum(axis=1)
+        # --- Foglio 1: FABBISOGNO ATTO MEDICI ---
+        if mapper_atto_aziendale and os.path.exists(mapper_atto_aziendale):
+            scrivi_foglio_riepilogo_atto_medici(
+                wb_az, personale_file, pensionamenti_file,
+                mapper_atto_aziendale, anno_analisi,
             )
 
-            if citta_az != prev_citta_az:
-                color_t_area = 1 - color_t_area
-                prev_citta_az = citta_az
-            fill_az = FILL_A if color_t_area else FILL_B
-
-            for _, r_az in agg_az.iterrows():
-                valori = (
-                    [citta_az, r_az['Profilo Professionale'],
-                     int(r_az[col_quant_ti]),
-                     int(r_az[col_quant_td]),
-                     int(r_az[col_quant_tot])]
-                    + [int(r_az[cp]) for cp in col_pens]
-                    + [int(r_az['Proiezione'])]
-                )
-                scrivi_riga_dati(ws_area, row_area, valori, fill_az)
-                row_area += 1
-
-        # --- Tabella separata: personale non assegnato / speciale ---
-        df_speciali = grouped[grouped['_CITTA'].isin(_AREE_SPECIALI)]
-        if not df_speciali.empty:
-            row_area += 1  # riga vuota di separazione
-
-            # Titoletto sezione
-            ws_area.merge_cells(
-                start_row=row_area, start_column=1,
-                end_row=row_area, end_column=len(col_area),
+        # --- Foglio 2: FABBISOGNO ATTO ALTRI ---
+        if profili_atto_xml and os.path.exists(profili_atto_xml):
+            scrivi_foglio_riepilogo_atto_profili(
+                wb_az, personale_file, pensionamenti_file,
+                profili_atto_xml, anno_analisi,
             )
-            t_spec = ws_area.cell(
-                row=row_area, column=1,
-                value='PERSONALE NON ASSEGNATO A SEDE OPERATIVA',
-            )
-            t_spec.font = Font(bold=True, size=12)
-            t_spec.alignment = ALIGN_CENTER
-            row_area += 1
 
-            # Intestazioni
-            scrivi_intestazioni(ws_area, col_area, riga=row_area)
-            row_area += 1
-
-            color_t_spec = 0
-            prev_spec = None
-            for citta_sp, df_sp in df_speciali.groupby('_CITTA', sort=True):
-                agg_sp = df_sp.groupby('Profilo Professionale').agg(
-                    **{
-                        col_quant_ti:  (col_quant_ti, 'sum'),
-                        col_quant_td:  (col_quant_td, 'sum'),
-                        **{cp: (cp, 'sum') for cp in col_pens},
-                    }
-                ).reset_index().sort_values('Profilo Professionale')
-                agg_sp[col_quant_tot] = (
-                    agg_sp[col_quant_ti] + agg_sp[col_quant_td]
-                )
-                agg_sp['Proiezione'] = (
-                    agg_sp[col_quant_tot] - agg_sp[col_pens].sum(axis=1)
-                )
-
-                if citta_sp != prev_spec:
-                    color_t_spec = 1 - color_t_spec
-                    prev_spec = citta_sp
-                fill_sp = FILL_A if color_t_spec else FILL_B
-
-                for _, r_sp in agg_sp.iterrows():
-                    valori = (
-                        [citta_sp, r_sp['Profilo Professionale'],
-                         int(r_sp[col_quant_ti]),
-                         int(r_sp[col_quant_td]),
-                         int(r_sp[col_quant_tot])]
-                        + [int(r_sp[cp]) for cp in col_pens]
-                        + [int(r_sp['Proiezione'])]
-                    )
-                    scrivi_riga_dati(ws_area, row_area, valori, fill_sp)
-                    row_area += 1
-
-        auto_larghezza_colonne(ws_area, col_area)
-
-        # --- Foglio 2: RIEPILOGO PER PROFILO ---
+        # --- Foglio 3: RIEPILOGO PER PROFILO ---
         ws_prof = wb_az.create_sheet(title='RIEPILOGO PER PROFILO')
         col_prof = (
             ['Profilo Professionale',
@@ -1804,21 +1469,7 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
 
         auto_larghezza_colonne(ws_comp, all_columns_comp, larghezza_min=10)
 
-        # --- Foglio 4: FABBISOGNO ATTO MEDICI ---
-        if mapper_atto_aziendale and os.path.exists(mapper_atto_aziendale):
-            scrivi_foglio_riepilogo_atto_medici(
-                wb_az, personale_file, pensionamenti_file,
-                mapper_atto_aziendale, anno_analisi,
-            )
-
-        # --- Foglio 5: FABBISOGNO ATTO ALTRI ---
-        if profili_atto_xml and os.path.exists(profili_atto_xml):
-            scrivi_foglio_riepilogo_atto_profili(
-                wb_az, personale_file, pensionamenti_file,
-                profili_atto_xml, anno_analisi,
-            )
-
-        # --- Foglio 6: FABBISOGNO AGENAS (riepilogo aziendale) ---
+        # --- Foglio 4: FABBISOGNO AGENAS (riepilogo aziendale) ---
         scrivi_foglio_riepilogo_agenas(
             wb_az, grouped, livello_presidio,
             # Ospedaliere
@@ -1892,13 +1543,12 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
                     ws_na = writer.sheets['Non assegnati']
                     auto_larghezza_colonne(ws_na, len(df_na_raw.columns))
 
-                file_outputs.append(nome_file_na)
-
         print(f"\n{'=' * 70}")
         print(f"ELABORAZIONE COMPLETATA - Anno di analisi: {anno_analisi}")
         print(f"{'=' * 70}")
-        for f in file_outputs:
-            print(f"Output salvato in: {f}")
+        print(f"Output salvato in: {nome_file_az}")
+        if 'nome_file_na' in locals():
+            print(f"Output salvato in: {nome_file_na}")
         print(f"Controprova salvata in: {debug_file}")
         print(f"Righe elaborate: {len(grouped)}")
         print(f"{'=' * 70}\n")

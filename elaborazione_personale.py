@@ -339,3 +339,111 @@ if __name__ == '__main__':
             output_file=FILE_OUTPUT_ODC,
             anno_analisi=ANNO_ANALISI,
         )
+
+    # STEP 5: Nota Metodologica – xlsx + PDF
+    print("\nGenerazione nota metodologica (xlsx + PDF)...")
+    try:
+        from src.calcolo_fabbisogno import read_indicators
+        from src.posti_letto import leggi_posti_letto_csv
+        from src.nota_metodologica import genera_nota_metodologica_xlsx
+        from src.nota_metodologica_pdf import NotaMetodologicaPDF
+
+        _indicators_nm = read_indicators(FILE_INDICATORI)
+        _posti_letto_nm = leggi_posti_letto_csv(FILE_POSTI_LETTO_CSV)
+
+        xlsx_path = genera_nota_metodologica_xlsx(
+            indicators=_indicators_nm,
+            posti_letto=_posti_letto_nm,
+            anno_analisi=ANNO_ANALISI,
+            output_dir=DIR_ELABORATI,
+        )
+        print(f"  xlsx nota metodologica generato: {xlsx_path}")
+
+        pdf_path = NotaMetodologicaPDF(
+            indicators=_indicators_nm,
+            posti_letto_citta=_posti_letto_nm,
+            anno=ANNO_ANALISI,
+            output_dir=DIR_ELABORATI,
+        ).genera()
+        print(f"  PDF  nota metodologica generato: {pdf_path}")
+    except Exception as exc:
+        print(f"  ATTENZIONE: impossibile generare la nota metodologica: {exc}")
+
+    # STEP 6: Dettaglio nominativo atto aziendale – medici + altri
+    print("\nGenerazione dettaglio nominativo atto aziendale...")
+    try:
+        from src.dettaglio_atto_aziendale import (
+            genera_dettaglio_medici,
+            genera_dettaglio_altri,
+        )
+        from src.export_pdf import ExportPDF
+
+        genera_dettaglio_medici(
+            personale_file=FILE_PERSONALE,
+            mapper_atto_aziendale=FILE_MEDICI_ATTO_AZIENDALE,
+            anno_analisi=ANNO_ANALISI,
+            output_dir=DIR_ELABORATI,
+            pensionamenti_file=FILE_PENSIONAMENTI,
+        )
+        genera_dettaglio_altri(
+            personale_file=FILE_PERSONALE,
+            profili_atto_xml=FILE_PROFILI_ATTO_AZIENDALE,
+            anno_analisi=ANNO_ANALISI,
+            output_dir=DIR_ELABORATI,
+            pensionamenti_file=FILE_PENSIONAMENTI,
+        )
+
+        _exp = ExportPDF(anno=ANNO_ANALISI, cartella_elaborati=DIR_ELABORATI)
+        _exp.genera_dettaglio('medici')
+        _exp.genera_dettaglio('altri')
+    except Exception as exc:
+        import traceback
+        print(f"  ATTENZIONE: impossibile generare il dettaglio atto: {exc}")
+        traceback.print_exc()
+
+    # STEP 7: Dettaglio nominativo per area AGENAS
+    print("\nGenerazione dettaglio nominativo per area AGENAS...")
+    try:
+        from src.dettaglio_agenas import genera_dettaglio_agenas
+        from src.export_pdf import ExportPDF as _ExportPDF
+
+        genera_dettaglio_agenas(
+            personale_file=FILE_PERSONALE,
+            anno_analisi=ANNO_ANALISI,
+            output_dir=DIR_ELABORATI,
+            pensionamenti_file=FILE_PENSIONAMENTI,
+            indicatori_agenas=indicatori_agenas,
+            indicatori_radiologia=indicatori_radiologia,
+            indicatori_anatomia_pat=indicatori_anatomia_pat,
+            indicatori_laboratorio=indicatori_laboratorio,
+            indicatori_tecnici_lab=indicatori_tecnici_lab,
+            indicatori_med_legale=indicatori_med_legale,
+            indicatori_trasfusionale=indicatori_trasfusionale,
+            indicatori_emergenza=indicatori_emergenza,
+            indicatori_terapia_intensiva=indicatori_terapia_intensiva,
+            indicatori_sale_operatorie=indicatori_sale_operatorie,
+            indicatori_salute_mentale=indicatori_salute_mentale,
+            indicatori_dipendenze=indicatori_dipendenze,
+            indicatori_npia=indicatori_npia,
+            indicatori_carcere=indicatori_carcere,
+        )
+        _ExportPDF(anno=ANNO_ANALISI,
+                   cartella_elaborati=DIR_ELABORATI).genera_dettaglio('agenas')
+    except Exception as exc:
+        import traceback
+        print(f"  ATTENZIONE: impossibile generare il dettaglio AGENAS: {exc}")
+        traceback.print_exc()
+
+    # STEP 8: PDF riepilogo aziendale
+    print("\nGenerazione PDF riepilogo aziendale...")
+    try:
+        from src.export_pdf import ExportPDF as _ExportPDFRiepilogo
+        pdf_riep = _ExportPDFRiepilogo(
+            anno=ANNO_ANALISI,
+            cartella_elaborati=DIR_ELABORATI,
+        ).genera()
+        print(f"  PDF riepilogo aziendale generato: {pdf_riep}")
+    except Exception as exc:
+        import traceback
+        print(f"  ATTENZIONE: impossibile generare il PDF riepilogo aziendale: {exc}")
+        traceback.print_exc()

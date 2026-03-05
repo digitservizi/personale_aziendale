@@ -1488,3 +1488,39 @@ def _scrivi_foglio_metodologia(wb, indicators, posti_letto_citta, anno_analisi):
     # indicatori, evitando che i testi descrittivi (merge multi-colonna)
     # la allarghino a dismisura.
     ws.column_dimensions['A'].width = 40
+
+
+# ============================================================
+# FUNZIONE PUBBLICA: genera file xlsx standalone
+# ============================================================
+
+def genera_nota_metodologica_xlsx(indicators: dict,
+                                   posti_letto: dict,
+                                   anno_analisi: int,
+                                   output_dir: str = 'elaborati') -> str:
+    """Genera un file xlsx autonomo con la sola nota metodologica.
+
+    Filtra automaticamente i reparti con posti letto attivi (ordinari +
+    DH + UTIC + DS > 0) in modo coerente con il PDF.
+
+    Restituisce il percorso del file generato.
+    """
+    import os
+    from openpyxl import Workbook
+
+    # Filtra solo PL attivi (stessa logica del PDF e di report_fabbisogno)
+    posti_letto_citta = {
+        k: v for k, v in posti_letto.items()
+        if (int(v.get('ordinari', 0)) + int(v.get('dh', 0))
+            + int(v.get('utic', 0)) + int(v.get('ds', 0))) > 0
+    }
+
+    wb = Workbook()
+    wb.remove(wb.active)
+
+    _scrivi_foglio_metodologia(wb, indicators, posti_letto_citta, anno_analisi)
+
+    os.makedirs(output_dir, exist_ok=True)
+    path = os.path.join(output_dir, f'nota_metodologica_{anno_analisi}.xlsx')
+    wb.save(path)
+    return path

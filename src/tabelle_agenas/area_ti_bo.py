@@ -106,9 +106,9 @@ def _scrivi_tabella_agenas_area_ti_bo(
     _MAPPING_PROFILI_AREA = [
         {'pattern': r'DIRIGENTE MEDICO|DIR\.? MED',
          'profilo_agenas': 'DIRIGENTE_MEDICO'},
-        {'pattern': r'INFERMIERE|INFERMIERA',
+        {'pattern': r'INFERMIER',          # cattura Infermiere/i/a
          'profilo_agenas': 'INFERMIERE'},
-        {'pattern': r'OPERATORE SOCIO',
+        {'pattern': r'OSS|OPERATORE SOCIO|AUSILIARIO',
          'profilo_agenas': 'OPERATORE_SOCIO_SANITARIO'},
     ]
 

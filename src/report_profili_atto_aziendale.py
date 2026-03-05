@@ -6,6 +6,8 @@ Esclude Dirigente Medico e Dirigente Veterinario, già coperti dal
 report medici (report_atto_aziendale.py).
 """
 
+from datetime import date
+
 import pandas as pd
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
@@ -87,6 +89,19 @@ def _calcola_report_profili(personale_file, pensionamenti_file,
     personale_df = carica_dataframe(personale_file)
     personale_df = normalizza_colonne_personale(personale_df)
 
+    # Esclusione personale già cessato alla data odierna
+    _oggi = date.today()
+    if 'DT_CESSAZIONE' in personale_df.columns:
+        _dt_cess = pd.to_datetime(
+            personale_df['DT_CESSAZIONE'], errors='coerce'
+        )
+        _mask_cessati = _dt_cess.notna() & (_dt_cess.dt.date <= _oggi)
+        _n_cessati = int(_mask_cessati.sum())
+        if _n_cessati:
+            print(f"  Esclusi {_n_cessati} dipendenti già cessati "
+                  f"(DT_CESSAZIONE <= {_oggi:%d/%m/%Y})")
+            personale_df = personale_df[~_mask_cessati].copy()
+
     # Escludi i profili medici (già nel report dedicato)
     personale_df = personale_df[
         ~personale_df['PROFILO_RAGGRUPPATO'].str.upper().isin(_PROFILI_MEDICI)
@@ -123,6 +138,17 @@ def _calcola_report_profili(personale_file, pensionamenti_file,
         on='MATR.',
         how='left',
     )
+
+    # Data uscita unificata: pensionamento OPPURE fine contratto TD
+    _dt_pens_p = pd.to_datetime(
+        pers_all_pens['DT_CESSAZIONE'], errors='coerce'
+    )
+    _dt_pers_p = pd.to_datetime(
+        pers_all_pens.get('DT_CESSAZIONE_PERS'), errors='coerce'
+    ) if 'DT_CESSAZIONE_PERS' in pers_all_pens.columns else pd.Series(
+        pd.NaT, index=pers_all_pens.index
+    )
+    pers_all_pens['_DT_USCITA'] = _dt_pens_p.fillna(_dt_pers_p)
 
     anni_pens = [anno_analisi + 1, anno_analisi + 2, anno_analisi + 3]
 
@@ -168,13 +194,11 @@ def _calcola_report_profili(personale_file, pensionamenti_file,
         n_ti = n_tot - n_td - n_univ      # residuale → TI
         delta = n_tot - dotazione
 
-        # Pensionamenti
+        # Pensionamenti e cessazioni
         df_ti_prof = pers_all_pens[
             pers_all_pens['PROFILO_RAGGRUPPATO'].str.upper() == nome_atto.upper()
         ]
-        dt_cess = pd.to_datetime(
-            df_ti_prof['DT_CESSAZIONE'], errors='coerce'
-        )
+        dt_cess = df_ti_prof['_DT_USCITA']
         pens = {}
         for anno in anni_pens:
             pens[anno] = int((dt_cess.dt.year == anno).sum())
@@ -245,9 +269,7 @@ def _calcola_report_profili(personale_file, pensionamenti_file,
             df_ti_nm = pers_all_pens[
                 pers_all_pens['PROFILO_RAGGRUPPATO'].str.upper() == prof_nm
             ]
-            dt_cess_nm = pd.to_datetime(
-                df_ti_nm['DT_CESSAZIONE'], errors='coerce'
-            )
+            dt_cess_nm = df_ti_nm['_DT_USCITA']
             pens_nm = {}
             for anno in anni_pens:
                 pens_nm[anno] = int((dt_cess_nm.dt.year == anno).sum())
@@ -313,7 +335,7 @@ def _calcola_report_profili(personale_file, pensionamenti_file,
             'DELTA': 'Delta',
         }
         for anno in anni_pens:
-            rename[f'PENSIONAMENTI_{anno}'] = f'Pensionamenti {anno}'
+            rename[f'PENSIONAMENTI_{anno}'] = f'Pens. e cessazioni {anno}'
             rename[f'PROIEZIONE_{anno}'] = f'Proiezione {anno}'
         return df.rename(columns=rename)
 

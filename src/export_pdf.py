@@ -402,57 +402,62 @@ def _build_table(block, avail_width):
     row_styles_info = block['row_styles']
     group_header = block.get('group_header')   # riga di gruppo (es. ospedali)
     group_spans = block.get('group_spans', {}) # {col_start_0based: (label, col_end_0based)}
+    col_widths_override = block.get('col_widths_override')  # larghezze esplicite (mm)
 
     if not header:
         return None
 
-    # ---- Classificazione colonne: testuale vs numerica ----
-    # Per ogni colonna calcola la max lunghezza dei DATI (escluso header)
-    col_data_lens = []
-    for ci in range(n_cols):
-        max_data = 0
-        for dr in data:
-            if ci < len(dr):
-                max_data = max(max_data, len(str(dr[ci])))
-        col_data_lens.append(max(max_data, 2))
-
-    col_hdr_lens = [len(str(header[ci])) for ci in range(n_cols)]
-
-    # Una colonna è "numerica/corta" se i dati sono <= 8 caratteri
-    is_numeric = [dl <= 8 for dl in col_data_lens]
-
-    # ---- Calcolo larghezze colonne ----
-    # Strategia: colonne numeriche ricevono larghezza basata sui DATI,
-    # colonne testuali ricevono larghezza basata sul contenuto reale.
-    # Gli header lunghi vanno a capo (Paragraph wrapping).
-    col_weights = []
-    for ci in range(n_cols):
-        if is_numeric[ci]:
-            # Colonne numeriche: larghezza proporzionale ai dati
-            # con un minimo ragionevole per l'header (che andrà a capo)
-            col_weights.append(max(col_data_lens[ci], 4))
+    # ---- Larghezze colonne ----
+    if col_widths_override:
+        # Larghezze esplicite: scala per riempire avail_width
+        s = sum(col_widths_override)
+        if s > 0:
+            scale = avail_width / s
+            col_widths = [w * scale for w in col_widths_override]
         else:
-            # Colonne testuali: usa il massimo tra header e dati
-            col_weights.append(max(col_data_lens[ci], col_hdr_lens[ci]))
+            col_widths = [avail_width / n_cols] * n_cols
+    else:
+        # ---- Classificazione colonne: testuale vs numerica ----
+        # Per ogni colonna calcola la max lunghezza dei DATI (escluso header)
+        col_data_lens = []
+        for ci in range(n_cols):
+            max_data = 0
+            for dr in data:
+                if ci < len(dr):
+                    max_data = max(max_data, len(str(dr[ci])))
+            col_data_lens.append(max(max_data, 2))
 
-    total_w = sum(col_weights)
-    if total_w == 0:
-        total_w = n_cols
+        col_hdr_lens = [len(str(header[ci])) for ci in range(n_cols)]
 
-    # Larghezza minima colonna
-    min_col_w = max(8 * mm, avail_width / (n_cols * 4))
+        # Una colonna è "numerica/corta" se i dati sono <= 8 caratteri
+        is_numeric = [dl <= 8 for dl in col_data_lens]
 
-    col_widths = []
-    for cw in col_weights:
-        w = (cw / total_w) * avail_width
-        w = max(w, min_col_w)
-        col_widths.append(w)
+        # ---- Calcolo larghezze colonne ----
+        col_weights = []
+        for ci in range(n_cols):
+            if is_numeric[ci]:
+                col_weights.append(max(col_data_lens[ci], 4))
+            else:
+                col_weights.append(max(col_data_lens[ci], col_hdr_lens[ci]))
 
-    # Riscala per occupare tutta la larghezza
-    s = sum(col_widths)
-    if s != 0:
-        scale = avail_width / s
-        col_widths = [w * scale for w in col_widths]
+        total_w = sum(col_weights)
+        if total_w == 0:
+            total_w = n_cols
+
+        # Larghezza minima colonna
+        min_col_w = max(8 * mm, avail_width / (n_cols * 4))
+
+        col_widths = []
+        for cw in col_weights:
+            w = (cw / total_w) * avail_width
+            w = max(w, min_col_w)
+            col_widths.append(w)
+
+        # Riscala per occupare tutta la larghezza
+        s = sum(col_widths)
+        if s != 0:
+            scale = avail_width / s
+            col_widths = [w * scale for w in col_widths]
 
     # ---- Font size adattativo ----
     if n_cols <= 5:
@@ -483,10 +488,12 @@ def _build_table(block, avail_width):
         'TblData', parent=_STYLES['Normal'],
         fontSize=font_size, leading=font_size + 2,
         alignment=TA_CENTER, fontName='Helvetica',
+        splitLongWords=0,
     )
     data_left_style = ParagraphStyle(
         'TblDataL', parent=data_para_style,
         alignment=TA_LEFT,
+        splitLongWords=0,
     )
     # Stile per righe TOTALE con sfondo blu (testo bianco)
     data_totale_blue_style = ParagraphStyle(
@@ -781,10 +788,21 @@ class ExportPDF:
 
         # ----- RIEPILOGO AZIENDALE -----
         if os.path.exists(self._xlsx_riepilogo):
+            # Ordine fogli: Atto Medici e Atto Altri prima, senza Riepilogo per Area
+            sheet_order_riepilogo = [
+                'FABBISOGNO ATTO MEDICI',
+                'FABBISOGNO ATTO ALTRI',
+                'RIEPILOGO PER PROFILO',
+                'COMPOSIZIONE PER AREA',
+                'FABBISOGNO AGENAS',
+                'FABBISOGNO TEORICO',
+                'VETERINARI',
+            ]
             story.extend(
                 self._processa_workbook(self._xlsx_riepilogo,
                                         "RIEPILOGO AZIENDALE",
-                                        avail_width))
+                                        avail_width,
+                                        sheet_order=sheet_order_riepilogo))
 
         # ----- ODC DM77 -----
         if os.path.exists(self._xlsx_odc):
@@ -799,8 +817,14 @@ class ExportPDF:
         print(f"PDF generato: {output_path}")
         return output_path
 
-    def _processa_workbook(self, xlsx_path, titolo_sezione, avail_width):
-        """Processa un workbook Excel e restituisce lista di flowables."""
+    def _processa_workbook(self, xlsx_path, titolo_sezione, avail_width,
+                           sheet_order=None):
+        """Processa un workbook Excel e restituisce lista di flowables.
+
+        sheet_order: lista opzionale di nomi foglio nell'ordine desiderato.
+                     I fogli non in lista vengono ignorati.
+                     Se None, usa l'ordine nativo del workbook.
+        """
         wb = openpyxl.load_workbook(xlsx_path)
         flowables = []
 
@@ -811,7 +835,13 @@ class ExportPDF:
             textColor=CLR_DIVIDER, spaceAfter=5 * mm)))
         flowables.append(Spacer(1, 3 * mm))
 
-        for si, sheet_name in enumerate(wb.sheetnames):
+        # Determina l'elenco ordinato di fogli da processare
+        if sheet_order is not None:
+            sheets_to_process = [s for s in sheet_order if s in wb.sheetnames]
+        else:
+            sheets_to_process = wb.sheetnames
+
+        for si, sheet_name in enumerate(sheets_to_process):
             ws = wb[sheet_name]
             if ws.max_row is None or ws.max_row < 2:
                 continue
@@ -829,6 +859,189 @@ class ExportPDF:
             blocks, max_col = _parse_sheet_blocks(ws)
             rendered = _render_blocks(blocks, avail_width)
             flowables.extend(rendered)
+
+        wb.close()
+        return flowables
+
+    def genera_dettaglio(self, tipo='medici', output_path=None):
+        """Genera un PDF A3 landscape dal file dettaglio nominativo.
+
+        tipo: 'medici' oppure 'altri'
+        """
+        xlsx_path = os.path.join(
+            self.cartella, f'dettaglio_{tipo}_{self.anno}.xlsx')
+        if not os.path.exists(xlsx_path):
+            print(f"  File non trovato, skip: {xlsx_path}")
+            return None
+
+        if output_path is None:
+            output_path = os.path.join(
+                self.cartella, f'dettaglio_{tipo}_{self.anno}.pdf')
+
+        titolo_tipo = (
+            'Dettaglio Nominativo Medici – Atto Aziendale'
+            if tipo == 'medici'
+            else 'Dettaglio Nominativo Altri Profili – Atto Aziendale'
+            if tipo == 'altri'
+            else 'Dettaglio Nominativo per Area AGENAS'
+        )
+
+        doc = SimpleDocTemplate(
+            output_path,
+            pagesize=PAGE_SIZE,
+            leftMargin=MARGIN,
+            rightMargin=MARGIN,
+            topMargin=MARGIN,
+            bottomMargin=MARGIN + 5 * mm,
+            title=f'{titolo_tipo} {self.anno}',
+            author='ASREM – Servizio Programmazione',
+        )
+
+        avail_width = PAGE_W - 2 * MARGIN
+        story = []
+
+        # ----- COPERTINA -----
+        story.append(Spacer(1, 60 * mm))
+        story.append(Paragraph(
+            "ASREM – Azienda Sanitaria Regionale del Molise",
+            ParagraphStyle('DCover1', parent=_STYLES['Heading1'],
+                           fontSize=22, leading=28, alignment=TA_CENTER,
+                           textColor=CLR_SECTION)))
+        story.append(Spacer(1, 15 * mm))
+        story.append(Paragraph(
+            titolo_tipo,
+            ParagraphStyle('DCover2', parent=_STYLES['Heading1'],
+                           fontSize=18, leading=24, alignment=TA_CENTER,
+                           textColor=CLR_DIVIDER)))
+        story.append(Spacer(1, 10 * mm))
+        story.append(Paragraph(
+            f"Anno di riferimento: {self.anno}",
+            ParagraphStyle('DCover3', parent=_STYLES['Heading2'],
+                           fontSize=14, leading=18, alignment=TA_CENTER,
+                           textColor=colors.HexColor('#2E75B6'))))
+        story.append(Spacer(1, 30 * mm))
+        now = datetime.now().strftime('%d/%m/%Y')
+        story.append(Paragraph(
+            f"Documento generato il {now}",
+            ParagraphStyle('DCoverDate', parent=_STYLES['Normal'],
+                           fontSize=10, alignment=TA_CENTER,
+                           textColor=colors.grey)))
+        story.append(PageBreak())
+
+        # ----- CONTENUTO -----
+        story.extend(
+            self._processa_workbook_dettaglio(xlsx_path, titolo_tipo,
+                                              avail_width))
+
+        doc.build(story, onFirstPage=_footer, onLaterPages=_footer)
+        print(f"PDF generato: {output_path}")
+        return output_path
+
+    def _processa_workbook_dettaglio(self, xlsx_path, titolo_sezione,
+                                     avail_width):
+        """Processa un workbook dettaglio nominativo.
+
+        I fogli hanno struttura fissa:
+          Riga 1  → titolo mergiato (fill 2E75B6, font bold 12)
+          Riga 2  → intestazioni (fill 1F4E79, font bold white)
+          Riga 3+ → dati (fill alternato DCE6F1 / FFFFFF)
+          Ultima  → totale (fill BDD7EE)
+        """
+        wb = openpyxl.load_workbook(xlsx_path)
+        flowables = []
+
+        # Titolo sezione principale
+        flowables.append(Paragraph(titolo_sezione, ParagraphStyle(
+            'WBTitleD', parent=_STYLES['Heading1'],
+            fontSize=18, leading=22, alignment=TA_CENTER,
+            textColor=CLR_DIVIDER, spaceAfter=5 * mm)))
+        flowables.append(Spacer(1, 3 * mm))
+
+        for si, sheet_name in enumerate(wb.sheetnames):
+            ws = wb[sheet_name]
+            if ws.max_row is None or ws.max_row < 3:
+                continue
+
+            # Nuova pagina per ogni foglio (tranne il primo)
+            if si > 0:
+                flowables.append(PageBreak())
+
+            # Titolo foglio
+            flowables.append(Paragraph(sheet_name, STYLE_SHEET_TITLE))
+
+            # Leggi il titolo dalla riga 1 (merge) come sottotitolo
+            titolo_foglio = _cell_text(ws.cell(row=1, column=1)).strip()
+            if titolo_foglio:
+                flowables.append(Paragraph(
+                    titolo_foglio,
+                    ParagraphStyle('DSheetSub', parent=_STYLES['Normal'],
+                                   fontSize=10, leading=13,
+                                   alignment=TA_CENTER,
+                                   textColor=colors.HexColor('#2E75B6'),
+                                   spaceAfter=2 * mm)))
+
+            flowables.append(Spacer(1, 1 * mm))
+
+            # Determina il numero reale di colonne usate
+            max_col = ws.max_column or 1
+            real_max_col = 1
+            for r in range(1, min(ws.max_row + 1, 20)):
+                for c in range(max_col, 0, -1):
+                    if ws.cell(row=r, column=c).value is not None:
+                        real_max_col = max(real_max_col, c)
+                        break
+            n_cols = real_max_col
+
+            # Riga 2 = intestazioni
+            header = [_cell_text(ws.cell(row=2, column=c)).strip()
+                      for c in range(1, n_cols + 1)]
+
+            # Righe 3..max_row = dati + riga totale finale
+            data_rows = []
+            row_styles_info = []
+            for r in range(3, ws.max_row + 1):
+                # Skip righe completamente vuote
+                vals = [_cell_text(ws.cell(row=r, column=c))
+                        for c in range(1, n_cols + 1)]
+                if all(v.strip() == '' for v in vals):
+                    continue
+                fill_h = _cell_fill_hex(ws.cell(row=r, column=1)) or ''
+                txt0 = vals[0].strip().upper()
+                is_tot = txt0.startswith('TOTALE')
+                # fill BDD7EE = riga totale nominativo; fill DCE6F1/bianco = dati
+                row_styles_info.append({
+                    'fill': fill_h.upper(),
+                    'bold': _cell_is_bold(ws.cell(row=r, column=1)),
+                    'is_totale': is_tot,
+                })
+                data_rows.append(vals)
+
+            if not data_rows:
+                continue
+
+            # Larghezze esplicite per fogli nominativi (11 colonne fisse)
+            # Matricola|Cognome|Nome|DtNasc|FormaContr|Disc/Prof|Sede|CDC|SSD|DtAss|DtCess
+            _COL_W_NOMINATIVO = [18, 38, 32, 22, 38, 45, 40, 60, 50, 22, 22]
+            col_widths_override = (
+                [w * mm for w in _COL_W_NOMINATIVO]
+                if n_cols == 11 else None
+            )
+
+            # Costruisci il blocco tabella e rendilo
+            block = {
+                'type': 'table',
+                'header': header,
+                'group_header': None,
+                'group_spans': {},
+                'data': data_rows,
+                'row_styles': row_styles_info,
+                'n_cols': n_cols,
+                'col_widths_override': col_widths_override,
+            }
+            tbl = _build_table(block, avail_width)
+            if tbl:
+                flowables.append(tbl)
+            flowables.append(Spacer(1, 2 * mm))
 
         wb.close()
         return flowables

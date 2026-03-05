@@ -600,9 +600,9 @@ def _conta_ti_bo(df, mapping_uo_ti):
     _MAP = [
         {'pattern': r'DIRIGENTE MEDICO|DIR\.? MED',
          'key': 'DIRIGENTE_MEDICO'},
-        {'pattern': r'INFERMIERE|INFERMIERA',
+        {'pattern': r'INFERMIER',        # cattura Infermiere/i/a
          'key': 'INFERMIERE'},
-        {'pattern': r'OPERATORE SOCIO',
+        {'pattern': r'OSS|OPERATORE SOCIO|AUSILIARIO',
          'key': 'OPERATORE_SOCIO_SANITARIO'},
     ]
     in_s = {}

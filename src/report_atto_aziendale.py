@@ -2,6 +2,8 @@
 Report medici – confronto dotazione da Atto Aziendale vs personale in servizio.
 """
 
+from datetime import date
+
 import pandas as pd
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
@@ -81,6 +83,19 @@ def _calcola_report_atto_medici(personale_file, pensionamenti_file,
     personale_df = carica_dataframe(personale_file)
     personale_df = normalizza_colonne_personale(personale_df)
 
+    # Esclusione personale già cessato alla data odierna
+    _oggi = date.today()
+    if 'DT_CESSAZIONE' in personale_df.columns:
+        _dt_cess = pd.to_datetime(
+            personale_df['DT_CESSAZIONE'], errors='coerce'
+        )
+        _mask_cessati = _dt_cess.notna() & (_dt_cess.dt.date <= _oggi)
+        _n_cessati = int(_mask_cessati.sum())
+        if _n_cessati:
+            print(f"  Esclusi {_n_cessati} dipendenti già cessati "
+                  f"(DT_CESSAZIONE <= {_oggi:%d/%m/%Y})")
+            personale_df = personale_df[~_mask_cessati].copy()
+
     # Tutti i dirigenti medici + veterinari (qualsiasi natura)
     medici_all = personale_df[
         personale_df['PROFILO_RAGGRUPPATO'].str.upper().isin(
@@ -126,6 +141,17 @@ def _calcola_report_atto_medici(personale_file, pensionamenti_file,
         how='left',
     )
 
+    # Data uscita unificata: pensionamento OPPURE fine contratto TD
+    _dt_pens_m = pd.to_datetime(
+        medici_all_pens['DT_CESSAZIONE'], errors='coerce'
+    )
+    _dt_pers_m = pd.to_datetime(
+        medici_all_pens.get('DT_CESSAZIONE_PERS'), errors='coerce'
+    ) if 'DT_CESSAZIONE_PERS' in medici_all_pens.columns else pd.Series(
+        pd.NaT, index=medici_all_pens.index
+    )
+    medici_all_pens['_DT_USCITA'] = _dt_pens_m.fillna(_dt_pers_m)
+
     anni_pensionamento = [anno_analisi + 1, anno_analisi + 2, anno_analisi + 3]
 
     # Mapper atto aziendale
@@ -161,9 +187,9 @@ def _calcola_report_atto_medici(personale_file, pensionamenti_file,
         n_ti = n_tot - n_td - n_univ     # residuale → TI
         delta = n_tot - dotazione
 
-        # Pensionamenti
+        # Pensionamenti e cessazioni
         m_ti_disc = medici_all_pens[medici_all_pens['DISC_UPPER'].isin(voci_db)]
-        dt_cess = pd.to_datetime(m_ti_disc['DT_CESSAZIONE'], errors='coerce')
+        dt_cess = m_ti_disc['_DT_USCITA']
         pens = {}
         for anno in anni_pensionamento:
             pens[anno] = int((dt_cess.dt.year == anno).sum())
@@ -227,7 +253,7 @@ def _calcola_report_atto_medici(personale_file, pensionamenti_file,
             n_ti = n_tot - n_td - n_univ
 
             m_ti_nm = medici_all_pens[medici_all_pens['DISC_UPPER'] == disc_nm]
-            dt_cess_nm = pd.to_datetime(m_ti_nm['DT_CESSAZIONE'], errors='coerce')
+            dt_cess_nm = m_ti_nm['_DT_USCITA']
             pens_nm = {}
             for anno in anni_pensionamento:
                 pens_nm[anno] = int((dt_cess_nm.dt.year == anno).sum())
@@ -287,7 +313,7 @@ def _calcola_report_atto_medici(personale_file, pensionamenti_file,
             'DELTA': 'Delta',
         }
         for anno in anni_pensionamento:
-            rename[f'PENSIONAMENTI_{anno}'] = f'Pensionamenti {anno}'
+            rename[f'PENSIONAMENTI_{anno}'] = f'Pens. e cessazioni {anno}'
             rename[f'PROIEZIONE_{anno}'] = f'Proiezione {anno}'
         return df.rename(columns=rename)
 
