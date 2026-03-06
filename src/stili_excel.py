@@ -51,14 +51,21 @@ def scrivi_titolo(ws, titolo, n_cols):
     ws.row_dimensions[1].height = 22
 
 
-def scrivi_intestazioni(ws, colonne, riga=2):
-    """Scrive le intestazioni colonna con stile header (bianco su blu)."""
+def scrivi_intestazioni(ws, colonne, riga=2, altezza=30):
+    """Scrive le intestazioni colonna con stile header (bianco su blu).
+
+    Il testo va a capo automaticamente (wrap_text) e l'altezza della riga
+    è impostata ad *altezza* punti (default 30) per garantire leggibilità.
+    """
+    align_hdr = Alignment(horizontal='center', vertical='center',
+                          wrap_text=True)
     for col_idx, col_name in enumerate(colonne, 1):
         c = ws.cell(row=riga, column=col_idx, value=col_name)
         c.font = FONT_HEADER
         c.fill = FILL_HEADER
-        c.alignment = ALIGN_CENTER
+        c.alignment = align_hdr
         c.border = THIN_BORDER
+    ws.row_dimensions[riga].height = altezza
 
 
 def scrivi_riga_dati(ws, riga_idx, valori, fill):

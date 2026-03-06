@@ -289,8 +289,8 @@ def genera_report_odc(personale_file, pensionamenti_file, lista_odc,
         'NOTE': 'Note',
     }
     for anno in anni_pensionamento:
-        rename_cols[f'PENSIONAMENTI_{anno}'] = f'Pens. e cessazioni {anno}'
-        rename_cols[f'PROIEZIONE_{anno}'] = f'Proiezione {anno}'
+        rename_cols[f'PENSIONAMENTI_{anno}'] = f'Pens./Ces. {anno}'
+        rename_cols[f'PROIEZIONE_{anno}'] = f'Proiez. {anno}'
     report_df = report_df.rename(columns=rename_cols)
 
     wb = Workbook()
@@ -303,11 +303,11 @@ def genera_report_odc(personale_file, pensionamenti_file, lista_odc,
     # Il fabbisogno DM77 è mostrato per ciascun profilo che rientra in una
     # categoria DM77; il delta è a livello di categoria (aggregato).
     ws_riep = wb.create_sheet(title='RIEPILOGO')
-    col_pens_odc = [f'Pens. e cessazioni {a}' for a in anni_pensionamento]
+    col_pens_odc = [f'Pens./Ces. {a}' for a in anni_pensionamento]
     col_riep = (
         ['Sede', 'Profilo Professionale', 'In Servizio',
          'Fabbisogno DM 77', 'Delta']
-        + col_pens_odc + ['Proiezione']
+        + col_pens_odc + ['Proiez. tot.']
     )
 
     scrivi_titolo(ws_riep, 'Riepilogo Ospedali di Comunità', len(col_riep))

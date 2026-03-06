@@ -1160,7 +1160,7 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
         'FABBISOGNO_AGENAS': 'Fabbisogno AGENAS',
     }
     for anno in anni_pensionamento:
-        rename_cols[f'PENSIONAMENTI_{anno}'] = f'Pens. e cessazioni {anno}'
+        rename_cols[f'PENSIONAMENTI_{anno}'] = f'Pens./Ces. {anno}'
     grouped = grouped.rename(columns=rename_cols)
 
     # ------------------------------------------------------------------
@@ -1186,7 +1186,7 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
         # ==============================================================
         # RIEPILOGO AZIENDALE (file separato, dati di tutte le aree)
         # ==============================================================
-        col_pens = [f'Pens. e cessazioni {a}' for a in anni_pensionamento]
+        col_pens = [f'Pens./Ces. {a}' for a in anni_pensionamento]
         col_quant_ti  = 'Quantità T.I.'
         col_quant_td  = 'Quantità T.D.'
         col_quant_tot = 'Totale'
@@ -1214,7 +1214,7 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
         col_prof = (
             ['Profilo Professionale',
              col_quant_ti, col_quant_td, col_quant_tot]
-            + col_pens + ['Proiezione']
+            + col_pens + ['Proiez. tot.']
         )
         scrivi_titolo(ws_prof,
                       f"RIEPILOGO AZIENDALE PER PROFILO - {anno_analisi}",
@@ -1229,7 +1229,7 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
             }
         ).reset_index().sort_values('Profilo Professionale')
         agg_prof[col_quant_tot] = agg_prof[col_quant_ti] + agg_prof[col_quant_td]
-        agg_prof['Proiezione'] = (
+        agg_prof['Proiez. tot.'] = (
             agg_prof[col_quant_tot] - agg_prof[col_pens].sum(axis=1)
         )
 
@@ -1242,7 +1242,7 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
                  int(r_p[col_quant_td]),
                  int(r_p[col_quant_tot])]
                 + [int(r_p[cp]) for cp in col_pens]
-                + [int(r_p['Proiezione'])]
+                + [int(r_p['Proiez. tot.'])]
             )
             scrivi_riga_dati(ws_prof, row_prof, valori, fill_p)
             row_prof += 1
@@ -1255,7 +1255,7 @@ def process_data(personale_file, pensionamenti_file, posti_letto_csv,
              int(agg_prof[col_quant_td].sum()),
              int(agg_prof[col_quant_tot].sum())]
             + [int(agg_prof[cp].sum()) for cp in col_pens]
-            + [int(agg_prof['Proiezione'].sum())]
+            + [int(agg_prof['Proiez. tot.'].sum())]
         )
         for ci, v in enumerate(tot_vals, 1):
             c = ws_prof.cell(row=row_prof, column=ci, value=v)

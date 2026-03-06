@@ -335,8 +335,8 @@ def _calcola_report_profili(personale_file, pensionamenti_file,
             'DELTA': 'Delta',
         }
         for anno in anni_pens:
-            rename[f'PENSIONAMENTI_{anno}'] = f'Pens. e cessazioni {anno}'
-            rename[f'PROIEZIONE_{anno}'] = f'Proiezione {anno}'
+            rename[f'PENSIONAMENTI_{anno}'] = f'Pens./Ces. {anno}'
+            rename[f'PROIEZIONE_{anno}'] = f'Proiez. {anno}'
         return df.rename(columns=rename)
 
     df_atto = pd.DataFrame(
