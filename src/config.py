@@ -107,9 +107,9 @@ POPOLAZIONE_AREA = {
 
 # Numero di detenuti per struttura penitenziaria
 DETENUTI_PER_ISTITUTO = {
-    'CAMPOBASSO': 184,   # Casa Circondariale 
-    'ISERNIA':     80,   # Casa Circondariale
-    'TERMOLI':    164,   # Casa Circondariale Larino
+    'CAMPOBASSO': 180,   # Casa Circondariale 
+    'ISERNIA':     73,   # Casa Circondariale
+    'TERMOLI':    117,   # Casa Circondariale Larino
 }
 
 # ============================================================
